@@ -3,20 +3,21 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { RWAHouse } from "../types";
 
 task("rwa:store-property", "Store property information")
-  .addParam("contract", "The RWAHouse contract address")
   .addParam("country", "Country code (number)", 0, types.int)
   .addParam("city", "City code (number)", 0, types.int)
   .addParam("valuation", "Property valuation (number)", 0, types.int)
   .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
-    const { ethers, fhevm } = hre;
+    const { ethers, fhevm, deployments } = hre;
     const [signer] = await ethers.getSigners();
 
-    const rwaHouse: RWAHouse = await ethers.getContractAt("RWAHouse", taskArgs.contract);
+    const RWAHouseDeployment = await deployments.get("RWAHouse");
+    const rwaHouse: RWAHouse = await ethers.getContractAt("RWAHouse", RWAHouseDeployment.address);
 
+    console.log(`Using RWAHouse contract at: ${RWAHouseDeployment.address}`);
     console.log("Creating encrypted input...");
     
     // Create encrypted input for valuation
-    const input = fhevm.createEncryptedInput(taskArgs.contract, signer.address);
+    const input = fhevm.createEncryptedInput(RWAHouseDeployment.address, signer.address);
     input.add32(taskArgs.valuation);
     const encryptedInput = await input.encrypt();
 
@@ -38,14 +39,15 @@ task("rwa:store-property", "Store property information")
   });
 
 task("rwa:get-property", "Get property information")
-  .addParam("contract", "The RWAHouse contract address")
   .addParam("owner", "Property owner address")
   .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
-    const { ethers } = hre;
+    const { ethers, deployments } = hre;
     const [signer] = await ethers.getSigners();
 
-    const rwaHouse: RWAHouse = await ethers.getContractAt("RWAHouse", taskArgs.contract);
+    const RWAHouseDeployment = await deployments.get("RWAHouse");
+    const rwaHouse: RWAHouse = await ethers.getContractAt("RWAHouse", RWAHouseDeployment.address);
 
+    console.log(`Using RWAHouse contract at: ${RWAHouseDeployment.address}`);
     console.log(`Getting property info for owner: ${taskArgs.owner}`);
 
     try {
@@ -66,13 +68,14 @@ task("rwa:get-property", "Get property information")
   });
 
 task("rwa:get-public-property", "Get public property information")
-  .addParam("contract", "The RWAHouse contract address")
   .addParam("owner", "Property owner address")
   .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
-    const { ethers } = hre;
+    const { ethers, deployments } = hre;
 
-    const rwaHouse: RWAHouse = await ethers.getContractAt("RWAHouse", taskArgs.contract);
+    const RWAHouseDeployment = await deployments.get("RWAHouse");
+    const rwaHouse: RWAHouse = await ethers.getContractAt("RWAHouse", RWAHouseDeployment.address);
 
+    console.log(`Using RWAHouse contract at: ${RWAHouseDeployment.address}`);
     console.log(`Getting public property info for owner: ${taskArgs.owner}`);
 
     try {
@@ -88,14 +91,15 @@ task("rwa:get-public-property", "Get public property information")
   });
 
 task("rwa:authorize", "Authorize access to property information")
-  .addParam("contract", "The RWAHouse contract address")
   .addParam("authorized", "Address to authorize")
   .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
-    const { ethers } = hre;
+    const { ethers, deployments } = hre;
     const [signer] = await ethers.getSigners();
 
-    const rwaHouse: RWAHouse = await ethers.getContractAt("RWAHouse", taskArgs.contract);
+    const RWAHouseDeployment = await deployments.get("RWAHouse");
+    const rwaHouse: RWAHouse = await ethers.getContractAt("RWAHouse", RWAHouseDeployment.address);
 
+    console.log(`Using RWAHouse contract at: ${RWAHouseDeployment.address}`);
     console.log(`Authorizing ${taskArgs.authorized} to access property info...`);
 
     try {
@@ -111,14 +115,15 @@ task("rwa:authorize", "Authorize access to property information")
   });
 
 task("rwa:revoke", "Revoke access to property information")
-  .addParam("contract", "The RWAHouse contract address")
   .addParam("authorized", "Address to revoke authorization from")
   .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
-    const { ethers } = hre;
+    const { ethers, deployments } = hre;
     const [signer] = await ethers.getSigners();
 
-    const rwaHouse: RWAHouse = await ethers.getContractAt("RWAHouse", taskArgs.contract);
+    const RWAHouseDeployment = await deployments.get("RWAHouse");
+    const rwaHouse: RWAHouse = await ethers.getContractAt("RWAHouse", RWAHouseDeployment.address);
 
+    console.log(`Using RWAHouse contract at: ${RWAHouseDeployment.address}`);
     console.log(`Revoking authorization from ${taskArgs.authorized}...`);
 
     try {
@@ -134,14 +139,15 @@ task("rwa:revoke", "Revoke access to property information")
   });
 
 task("rwa:check-authorization", "Check if an address is authorized")
-  .addParam("contract", "The RWAHouse contract address")
   .addParam("owner", "Property owner address")
   .addParam("accessor", "Address to check authorization for")
   .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
-    const { ethers } = hre;
+    const { ethers, deployments } = hre;
 
-    const rwaHouse: RWAHouse = await ethers.getContractAt("RWAHouse", taskArgs.contract);
+    const RWAHouseDeployment = await deployments.get("RWAHouse");
+    const rwaHouse: RWAHouse = await ethers.getContractAt("RWAHouse", RWAHouseDeployment.address);
 
+    console.log(`Using RWAHouse contract at: ${RWAHouseDeployment.address}`);
     console.log(`Checking authorization...`);
     console.log(`Owner: ${taskArgs.owner}`);
     console.log(`Accessor: ${taskArgs.accessor}`);
@@ -155,18 +161,19 @@ task("rwa:check-authorization", "Check if an address is authorized")
   });
 
 task("rwa:update-valuation", "Update property valuation")
-  .addParam("contract", "The RWAHouse contract address")
   .addParam("valuation", "New property valuation", 0, types.int)
   .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
-    const { ethers, fhevm } = hre;
+    const { ethers, fhevm, deployments } = hre;
     const [signer] = await ethers.getSigners();
 
-    const rwaHouse: RWAHouse = await ethers.getContractAt("RWAHouse", taskArgs.contract);
+    const RWAHouseDeployment = await deployments.get("RWAHouse");
+    const rwaHouse: RWAHouse = await ethers.getContractAt("RWAHouse", RWAHouseDeployment.address);
 
+    console.log(`Using RWAHouse contract at: ${RWAHouseDeployment.address}`);
     console.log("Creating encrypted input for new valuation...");
     
     // Create encrypted input for new valuation
-    const input = fhevm.createEncryptedInput(taskArgs.contract, signer.address);
+    const input = fhevm.createEncryptedInput(RWAHouseDeployment.address, signer.address);
     input.add32(taskArgs.valuation);
     const encryptedInput = await input.encrypt();
 
@@ -188,13 +195,14 @@ task("rwa:update-valuation", "Update property valuation")
   });
 
 task("rwa:has-property", "Check if an address has property")
-  .addParam("contract", "The RWAHouse contract address")
   .addParam("owner", "Address to check")
   .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
-    const { ethers } = hre;
+    const { ethers, deployments } = hre;
 
-    const rwaHouse: RWAHouse = await ethers.getContractAt("RWAHouse", taskArgs.contract);
+    const RWAHouseDeployment = await deployments.get("RWAHouse");
+    const rwaHouse: RWAHouse = await ethers.getContractAt("RWAHouse", RWAHouseDeployment.address);
 
+    console.log(`Using RWAHouse contract at: ${RWAHouseDeployment.address}`);
     console.log(`Checking if ${taskArgs.owner} has property...`);
 
     try {
