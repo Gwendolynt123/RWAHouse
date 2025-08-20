@@ -12,8 +12,7 @@ interface PropertyData {
 export const PropertyRegistration: React.FC = () => {
   const { address } = useAccount();
   const { createEncryptedInput, isLoading: fheLoading } = useFHE();
-  const { useStoreProperty, contractAddress } = useRWAHouse();
-  const { write: storeProperty, isLoading: contractLoading } = useStoreProperty();
+  const { storeProperty, writeStoreProperty, contractAddress } = useRWAHouse();
 
   const [formData, setFormData] = useState<PropertyData>({
     country: 0,
@@ -59,14 +58,12 @@ export const PropertyRegistration: React.FC = () => {
       const encryptedInput = await input.encrypt();
 
       // Call the contract
-      storeProperty({
-        args: [
-          encryptedInput.handles[0], // country
-          encryptedInput.handles[1], // city
-          encryptedInput.handles[2], // valuation
-          encryptedInput.inputProof,
-        ],
-      });
+      writeStoreProperty([
+        encryptedInput.handles[0], // country
+        encryptedInput.handles[1], // city
+        encryptedInput.handles[2], // valuation
+        encryptedInput.inputProof,
+      ]);
 
     } catch (error) {
       console.error('Error storing property:', error);
@@ -135,10 +132,10 @@ export const PropertyRegistration: React.FC = () => {
 
         <button 
           type="submit" 
-          disabled={isSubmitting || contractLoading || !address}
+          disabled={isSubmitting || storeProperty.isPending || !address}
           className="submit-button"
         >
-          {isSubmitting || contractLoading ? 'Storing Property...' : 'Store Property Info'}
+          {isSubmitting || storeProperty.isPending ? 'Storing Property...' : 'Store Property Info'}
         </button>
       </form>
 

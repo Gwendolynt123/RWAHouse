@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { createInstance, initSDK, SepoliaConfig } from '@zama-fhe/relayer-sdk';
-import type { FhevmInstance } from '@zama-fhe/relayer-sdk';
+import { createInstance, initSDK, SepoliaConfig } from '@zama-fhe/relayer-sdk/bundle';
+import type { FhevmInstance } from '@zama-fhe/relayer-sdk/bundle';
 
 export const useFHE = () => {
   const [instance, setInstance] = useState<FhevmInstance | null>(null);
@@ -39,7 +39,7 @@ export const useFHE = () => {
 
   const userDecrypt = async (
     handleContractPairs: Array<{ handle: string; contractAddress: string }>,
-    privateKey: Uint8Array,
+    privateKey: string,
     publicKey: string,
     signature: string,
     contractAddresses: string[],

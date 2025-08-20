@@ -1,10 +1,10 @@
-import { useContractRead, useContractWrite, useWaitForTransaction } from 'wagmi';
+import { useReadContract, useWriteContract } from 'wagmi';
 import { CONTRACT_ADDRESSES, RWA_HOUSE_ABI } from '../config/contracts';
 import { useChainId } from 'wagmi';
 
 export const useRWAHouse = () => {
   const chainId = useChainId();
-  
+
   const getContractAddress = () => {
     if (chainId === 11155111) return CONTRACT_ADDRESSES.sepolia;
     return CONTRACT_ADDRESSES.localhost;
@@ -12,109 +12,146 @@ export const useRWAHouse = () => {
 
   // Check if user has a property
   const useHasProperty = (address?: string) => {
-    return useContractRead({
+    return useReadContract({
       address: getContractAddress() as `0x${string}`,
       abi: RWA_HOUSE_ABI,
       functionName: 'hasProperty',
       args: address ? [address] : undefined,
-      enabled: !!address,
+      query: {
+        enabled: !!address,
+      },
     });
   };
 
   // Check if address is authorized
   const useIsAuthorized = (owner?: string, accessor?: string) => {
-    return useContractRead({
+    return useReadContract({
       address: getContractAddress() as `0x${string}`,
       abi: RWA_HOUSE_ABI,
       functionName: 'isAuthorized',
       args: owner && accessor ? [owner, accessor] : undefined,
-      enabled: !!(owner && accessor),
+      query: {
+        enabled: !!(owner && accessor),
+      },
     });
   };
 
   // Store property info
-  const useStoreProperty = () => {
-    return useContractWrite({
+  const storeProperty = useWriteContract();
+
+  // Authorize access
+  const authorizeAccess = useWriteContract();
+
+  // Revoke access
+  const revokeAccess = useWriteContract();
+
+  // Authorize query
+  const authorizeQuery = useWriteContract();
+
+  // Query country
+  const queryCountry = useWriteContract();
+
+  // Query city
+  const queryCity = useWriteContract();
+
+  // Query valuation
+  const queryValuation = useWriteContract();
+
+  // Update valuation
+  const updateValuation = useWriteContract();
+
+  // Helper functions to call write contracts with proper parameters
+  const writeStoreProperty = (args: any[]) => {
+    storeProperty.writeContract({
       address: getContractAddress() as `0x${string}`,
       abi: RWA_HOUSE_ABI,
       functionName: 'storePropertyInfo',
+      args,
     });
   };
 
-  // Authorize access
-  const useAuthorizeAccess = () => {
-    return useContractWrite({
+  const writeAuthorizeAccess = (args: any[]) => {
+    authorizeAccess.writeContract({
       address: getContractAddress() as `0x${string}`,
       abi: RWA_HOUSE_ABI,
       functionName: 'authorizeAccess',
+      args,
     });
   };
 
-  // Revoke access
-  const useRevokeAccess = () => {
-    return useContractWrite({
+  const writeRevokeAccess = (args: any[]) => {
+    revokeAccess.writeContract({
       address: getContractAddress() as `0x${string}`,
       abi: RWA_HOUSE_ABI,
       functionName: 'revokeAccess',
+      args,
     });
   };
 
-  // Authorize query
-  const useAuthorizeQuery = () => {
-    return useContractWrite({
+  const writeAuthorizeQuery = (args: any[]) => {
+    authorizeQuery.writeContract({
       address: getContractAddress() as `0x${string}`,
       abi: RWA_HOUSE_ABI,
       functionName: 'authorizeQuery',
+      args,
     });
   };
 
-  // Query country
-  const useQueryCountry = () => {
-    return useContractWrite({
+  const writeQueryCountry = (args: any[]) => {
+    queryCountry.writeContract({
       address: getContractAddress() as `0x${string}`,
       abi: RWA_HOUSE_ABI,
       functionName: 'queryIsInCountry',
+      args,
     });
   };
 
-  // Query city
-  const useQueryCity = () => {
-    return useContractWrite({
+  const writeQueryCity = (args: any[]) => {
+    queryCity.writeContract({
       address: getContractAddress() as `0x${string}`,
       abi: RWA_HOUSE_ABI,
       functionName: 'queryIsInCity',
+      args,
     });
   };
 
-  // Query valuation
-  const useQueryValuation = () => {
-    return useContractWrite({
+  const writeQueryValuation = (args: any[]) => {
+    queryValuation.writeContract({
       address: getContractAddress() as `0x${string}`,
       abi: RWA_HOUSE_ABI,
       functionName: 'queryIsAboveValue',
+      args,
     });
   };
 
-  // Update valuation
-  const useUpdateValuation = () => {
-    return useContractWrite({
+  const writeUpdateValuation = (args: any[]) => {
+    updateValuation.writeContract({
       address: getContractAddress() as `0x${string}`,
       abi: RWA_HOUSE_ABI,
       functionName: 'updatePropertyValuation',
+      args,
     });
   };
 
   return {
     useHasProperty,
     useIsAuthorized,
-    useStoreProperty,
-    useAuthorizeAccess,
-    useRevokeAccess,
-    useAuthorizeQuery,
-    useQueryCountry,
-    useQueryCity,
-    useQueryValuation,
-    useUpdateValuation,
+    storeProperty,
+    authorizeAccess,
+    revokeAccess,
+    authorizeQuery,
+    queryCountry,
+    queryCity,
+    queryValuation,
+    updateValuation,
+    writeStoreProperty,
+    writeAuthorizeAccess,
+    writeRevokeAccess,
+    writeAuthorizeQuery,
+    writeQueryCountry,
+    writeQueryCity,
+    writeQueryValuation,
+    writeUpdateValuation,
     contractAddress: getContractAddress(),
   };
 };
