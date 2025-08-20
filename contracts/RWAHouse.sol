@@ -11,8 +11,8 @@ contract RWAHouse is SepoliaConfig {
     
     /// @notice Structure to store encrypted property information
     struct PropertyInfo {
-        uint256 country;        // Country code (plaintext)
-        uint256 city;           // City code (plaintext)
+        euint32 country;        // Country code (encrypted)
+        euint32 city;           // City code (encrypted)
         euint32 valuation;      // Property valuation (encrypted)
         bool exists;            // Whether the property exists
     }
@@ -24,7 +24,7 @@ contract RWAHouse is SepoliaConfig {
     mapping(address => mapping(address => bool)) private authorizations;
     
     /// @notice Event emitted when property information is stored
-    event PropertyStored(address indexed owner, uint256 country, uint256 city);
+    event PropertyStored(address indexed owner);
     
     /// @notice Event emitted when authorization is granted
     event AuthorizationGranted(address indexed owner, address indexed authorized);
@@ -33,17 +33,19 @@ contract RWAHouse is SepoliaConfig {
     event AuthorizationRevoked(address indexed owner, address indexed authorized);
     
     /// @notice Store encrypted property information bound to the sender's wallet address
-    /// @param country The country code where the property is located
-    /// @param city The city code where the property is located
+    /// @param encryptedCountry The encrypted country code where the property is located
+    /// @param encryptedCity The encrypted city code where the property is located
     /// @param encryptedValuation The encrypted property valuation
     /// @param inputProof The proof for the encrypted input
     function storePropertyInfo(
-        uint256 country,
-        uint256 city,
+        externalEuint32 encryptedCountry,
+        externalEuint32 encryptedCity,
         externalEuint32 encryptedValuation,
         bytes calldata inputProof
     ) external {
-        // Convert external encrypted input to internal encrypted value
+        // Convert external encrypted inputs to internal encrypted values
+        euint32 country = FHE.fromExternal(encryptedCountry, inputProof);
+        euint32 city = FHE.fromExternal(encryptedCity, inputProof);
         euint32 valuation = FHE.fromExternal(encryptedValuation, inputProof);
         
         // Store the property information
@@ -55,22 +57,26 @@ contract RWAHouse is SepoliaConfig {
         });
         
         // Grant access permissions
+        FHE.allowThis(country);
+        FHE.allow(country, msg.sender);
+        FHE.allowThis(city);
+        FHE.allow(city, msg.sender);
         FHE.allowThis(valuation);
         FHE.allow(valuation, msg.sender);
         
-        emit PropertyStored(msg.sender, country, city);
+        emit PropertyStored(msg.sender);
     }
     
     /// @notice Get property information for a specific owner
     /// @param owner The address of the property owner
-    /// @return country The country code
-    /// @return city The city code
+    /// @return country The encrypted country code
+    /// @return city The encrypted city code
     /// @return valuation The encrypted valuation (only accessible if authorized)
     /// @return exists Whether the property exists
     function getPropertyInfo(address owner) 
         external 
         view 
-        returns (uint256 country, uint256 city, euint32 valuation, bool exists) 
+        returns (euint32 country, euint32 city, euint32 valuation, bool exists) 
     {
         require(properties[owner].exists, "Property does not exist");
         require(
@@ -95,16 +101,48 @@ contract RWAHouse is SepoliaConfig {
         return properties[owner].valuation;
     }
     
-    /// @notice Get public property information (country and city only)
+    /// @notice Get only the encrypted country for a property owner
     /// @param owner The address of the property owner
-    /// @return country The country code
-    /// @return city The city code
+    /// @return The encrypted country code
+    function getPropertyCountry(address owner) external view returns (euint32) {
+        require(properties[owner].exists, "Property does not exist");
+        require(
+            owner == msg.sender || authorizations[owner][msg.sender], 
+            "Unauthorized access"
+        );
+        
+        return properties[owner].country;
+    }
+    
+    /// @notice Get only the encrypted city for a property owner
+    /// @param owner The address of the property owner
+    /// @return The encrypted city code
+    function getPropertyCity(address owner) external view returns (euint32) {
+        require(properties[owner].exists, "Property does not exist");
+        require(
+            owner == msg.sender || authorizations[owner][msg.sender], 
+            "Unauthorized access"
+        );
+        
+        return properties[owner].city;
+    }
+    
+    /// @notice Get encrypted property location information (country and city)
+    /// @param owner The address of the property owner
+    /// @return country The encrypted country code
+    /// @return city The encrypted city code
     /// @return exists Whether the property exists
-    function getPublicPropertyInfo(address owner) 
+    function getPropertyLocation(address owner) 
         external 
         view 
-        returns (uint256 country, uint256 city, bool exists) 
+        returns (euint32 country, euint32 city, bool exists) 
     {
+        require(properties[owner].exists, "Property does not exist");
+        require(
+            owner == msg.sender || authorizations[owner][msg.sender], 
+            "Unauthorized access"
+        );
+        
         PropertyInfo memory property = properties[owner];
         return (property.country, property.city, property.exists);
     }
@@ -118,7 +156,9 @@ contract RWAHouse is SepoliaConfig {
         
         authorizations[msg.sender][authorized] = true;
         
-        // Grant FHE access to the authorized address
+        // Grant FHE access to the authorized address for all encrypted fields
+        FHE.allow(properties[msg.sender].country, authorized);
+        FHE.allow(properties[msg.sender].city, authorized);
         FHE.allow(properties[msg.sender].valuation, authorized);
         
         emit AuthorizationGranted(msg.sender, authorized);
@@ -163,9 +203,64 @@ contract RWAHouse is SepoliaConfig {
         FHE.allowThis(newValuation);
         FHE.allow(newValuation, msg.sender);
         
-        // Grant access to all previously authorized addresses
-        // Note: This is a simplified approach. In production, you might want to 
-        // track authorized addresses more efficiently
+    }
+    
+    /// @notice Update property location (country and city) (only owner can update)
+    /// @param newEncryptedCountry The new encrypted country code
+    /// @param newEncryptedCity The new encrypted city code
+    /// @param inputProof The proof for the encrypted input
+    function updatePropertyLocation(
+        externalEuint32 newEncryptedCountry,
+        externalEuint32 newEncryptedCity,
+        bytes calldata inputProof
+    ) external {
+        require(properties[msg.sender].exists, "Property does not exist");
+        
+        // Convert external encrypted inputs to internal encrypted values
+        euint32 newCountry = FHE.fromExternal(newEncryptedCountry, inputProof);
+        euint32 newCity = FHE.fromExternal(newEncryptedCity, inputProof);
+        
+        // Update the location
+        properties[msg.sender].country = newCountry;
+        properties[msg.sender].city = newCity;
+        
+        // Grant access permissions
+        FHE.allowThis(newCountry);
+        FHE.allow(newCountry, msg.sender);
+        FHE.allowThis(newCity);
+        FHE.allow(newCity, msg.sender);
+    }
+    
+    /// @notice Update all property information (only owner can update)
+    /// @param newEncryptedCountry The new encrypted country code
+    /// @param newEncryptedCity The new encrypted city code
+    /// @param newEncryptedValuation The new encrypted valuation
+    /// @param inputProof The proof for the encrypted input
+    function updateCompletePropertyInfo(
+        externalEuint32 newEncryptedCountry,
+        externalEuint32 newEncryptedCity,
+        externalEuint32 newEncryptedValuation,
+        bytes calldata inputProof
+    ) external {
+        require(properties[msg.sender].exists, "Property does not exist");
+        
+        // Convert external encrypted inputs to internal encrypted values
+        euint32 newCountry = FHE.fromExternal(newEncryptedCountry, inputProof);
+        euint32 newCity = FHE.fromExternal(newEncryptedCity, inputProof);
+        euint32 newValuation = FHE.fromExternal(newEncryptedValuation, inputProof);
+        
+        // Update all property information
+        properties[msg.sender].country = newCountry;
+        properties[msg.sender].city = newCity;
+        properties[msg.sender].valuation = newValuation;
+        
+        // Grant access permissions
+        FHE.allowThis(newCountry);
+        FHE.allow(newCountry, msg.sender);
+        FHE.allowThis(newCity);
+        FHE.allow(newCity, msg.sender);
+        FHE.allowThis(newValuation);
+        FHE.allow(newValuation, msg.sender);
     }
     
     /// @notice Check if a property exists for an address
