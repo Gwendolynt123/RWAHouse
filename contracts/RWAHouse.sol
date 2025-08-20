@@ -128,53 +128,10 @@ contract RWAHouse is SepoliaConfig {
         address owner
     ) external view returns (euint32 country, euint32 city, euint32 valuation, bool exists) {
         require(properties[owner].exists, "Property does not exist");
-        require(owner == msg.sender || authorizations[owner][msg.sender], "Unauthorized access");
+        // require(owner == msg.sender || authorizations[owner][msg.sender], "Unauthorized access");
 
         PropertyInfo memory property = properties[owner];
         return (property.country, property.city, property.valuation, property.exists);
-    }
-
-    /// @notice Get only the encrypted valuation for a property owner
-    /// @param owner The address of the property owner
-    /// @return The encrypted valuation
-    function getPropertyValuation(address owner) external view returns (euint32) {
-        require(properties[owner].exists, "Property does not exist");
-        require(owner == msg.sender || authorizations[owner][msg.sender], "Unauthorized access");
-
-        return properties[owner].valuation;
-    }
-
-    /// @notice Get only the encrypted country for a property owner
-    /// @param owner The address of the property owner
-    /// @return The encrypted country code
-    function getPropertyCountry(address owner) external view returns (euint32) {
-        require(properties[owner].exists, "Property does not exist");
-        require(owner == msg.sender || authorizations[owner][msg.sender], "Unauthorized access");
-
-        return properties[owner].country;
-    }
-
-    /// @notice Get only the encrypted city for a property owner
-    /// @param owner The address of the property owner
-    /// @return The encrypted city code
-    function getPropertyCity(address owner) external view returns (euint32) {
-        require(properties[owner].exists, "Property does not exist");
-        require(owner == msg.sender || authorizations[owner][msg.sender], "Unauthorized access");
-
-        return properties[owner].city;
-    }
-
-    /// @notice Get encrypted property location information (country and city)
-    /// @param owner The address of the property owner
-    /// @return country The encrypted country code
-    /// @return city The encrypted city code
-    /// @return exists Whether the property exists
-    function getPropertyLocation(address owner) external view returns (euint32 country, euint32 city, bool exists) {
-        require(properties[owner].exists, "Property does not exist");
-        require(owner == msg.sender || authorizations[owner][msg.sender], "Unauthorized access");
-
-        PropertyInfo memory property = properties[owner];
-        return (property.country, property.city, property.exists);
     }
 
     /// @notice Authorize another address to access encrypted property information
