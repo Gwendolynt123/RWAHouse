@@ -10,14 +10,14 @@ interface Authorization {
 export const AuthorizationManager: React.FC = () => {
   const { address } = useAccount();
   const { 
-    useAuthorizeAccess, 
-    useRevokeAccess, 
+    authorizeAccess,
+    revokeAccess, 
     useIsAuthorized,
-    useHasProperty 
+    useHasProperty,
+    writeAuthorizeAccess,
+    writeRevokeAccess
   } = useRWAHouse();
 
-  const { write: authorizeAccess, isLoading: authorizing } = useAuthorizeAccess();
-  const { write: revokeAccess, isLoading: revoking } = useRevokeAccess();
   const { data: hasProperty } = useHasProperty(address);
 
   const [authForm, setAuthForm] = useState({
@@ -52,9 +52,7 @@ export const AuthorizationManager: React.FC = () => {
       return;
     }
 
-    authorizeAccess({
-      args: [authForm.address],
-    });
+    writeAuthorizeAccess([authForm.address]);
 
     // Add to local state (in real app, this would be updated from contract events)
     setAuthorizations(prev => [
@@ -71,9 +69,7 @@ export const AuthorizationManager: React.FC = () => {
       return;
     }
 
-    revokeAccess({
-      args: [targetAddress],
-    });
+    writeRevokeAccess([targetAddress]);
 
     // Update local state
     setAuthorizations(prev => 
@@ -123,10 +119,10 @@ export const AuthorizationManager: React.FC = () => {
           </div>
           <button 
             onClick={handleAuthorize}
-            disabled={authorizing}
+            disabled={authorizeAccess.isPending}
             className="authorize-button"
           >
-            {authorizing ? 'Authorizing...' : 'Grant Access'}
+            {authorizeAccess.isPending ? 'Authorizing...' : 'Grant Access'}
           </button>
         </div>
       </div>
@@ -180,10 +176,10 @@ export const AuthorizationManager: React.FC = () => {
                 {auth.isAuthorized && (
                   <button 
                     onClick={() => handleRevoke(auth.address)}
-                    disabled={revoking}
+                    disabled={revokeAccess.isPending}
                     className="revoke-button"
                   >
-                    {revoking ? 'Revoking...' : 'Revoke'}
+                    {revokeAccess.isPending ? 'Revoking...' : 'Revoke'}
                   </button>
                 )}
               </div>
