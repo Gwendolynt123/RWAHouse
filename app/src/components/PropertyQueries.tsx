@@ -13,16 +13,15 @@ interface QueryResult {
 export const PropertyQueries: React.FC = () => {
   const { address } = useAccount();
   const { 
-    useQueryCountry, 
-    useQueryCity, 
-    useQueryValuation,
-    useAuthorizeQuery
+    queryCountry,
+    queryCity, 
+    queryValuation,
+    authorizeQuery,
+    writeQueryCountry,
+    writeQueryCity,
+    writeQueryValuation,
+    writeAuthorizeQuery
   } = useRWAHouse();
-
-  const { write: queryCountry, isLoading: queryingCountry } = useQueryCountry();
-  const { write: queryCity, isLoading: queryingCity } = useQueryCity();
-  const { write: queryValuation, isLoading: queryingValuation } = useQueryValuation();
-  const { write: authorizeQuery, isLoading: authorizing } = useAuthorizeQuery();
 
   const [queries, setQueries] = useState<QueryResult[]>([]);
   const [queryForm, setQueryForm] = useState({
@@ -43,9 +42,7 @@ export const PropertyQueries: React.FC = () => {
       return;
     }
 
-    queryCountry({
-      args: [queryForm.propertyOwner, parseInt(queryForm.countryCode)],
-    });
+    writeQueryCountry([queryForm.propertyOwner, parseInt(queryForm.countryCode)]);
 
     // Add to pending queries
     const newQuery: QueryResult = {
@@ -63,9 +60,7 @@ export const PropertyQueries: React.FC = () => {
       return;
     }
 
-    queryCity({
-      args: [queryForm.propertyOwner, parseInt(queryForm.cityCode)],
-    });
+    writeQueryCity([queryForm.propertyOwner, parseInt(queryForm.cityCode)]);
 
     const newQuery: QueryResult = {
       requestId: Date.now().toString(),
@@ -82,9 +77,7 @@ export const PropertyQueries: React.FC = () => {
       return;
     }
 
-    queryValuation({
-      args: [queryForm.propertyOwner, parseInt(queryForm.minValuation)],
-    });
+    writeQueryValuation([queryForm.propertyOwner, parseInt(queryForm.minValuation)]);
 
     const newQuery: QueryResult = {
       requestId: Date.now().toString(),
@@ -101,9 +94,7 @@ export const PropertyQueries: React.FC = () => {
       return;
     }
 
-    authorizeQuery({
-      args: [authForm.requester, parseInt(authForm.queryType)],
-    });
+    writeAuthorizeQuery([authForm.requester, parseInt(authForm.queryType)]);
   };
 
   if (!address) {
@@ -149,10 +140,10 @@ export const PropertyQueries: React.FC = () => {
           
           <button 
             onClick={handleAuthorizeQuery}
-            disabled={authorizing}
+            disabled={authorizeQuery.isPending}
             className="auth-button"
           >
-            {authorizing ? 'Authorizing...' : 'Authorize Query'}
+            {authorizeQuery.isPending ? 'Authorizing...' : 'Authorize Query'}
           </button>
         </div>
       </div>
@@ -187,10 +178,10 @@ export const PropertyQueries: React.FC = () => {
               </div>
               <button 
                 onClick={handleQueryCountry}
-                disabled={queryingCountry}
+                disabled={queryCountry.isPending}
                 className="query-button"
               >
-                {queryingCountry ? 'Querying...' : 'Query Country'}
+                {queryCountry.isPending ? 'Querying...' : 'Query Country'}
               </button>
             </div>
 
@@ -207,10 +198,10 @@ export const PropertyQueries: React.FC = () => {
               </div>
               <button 
                 onClick={handleQueryCity}
-                disabled={queryingCity}
+                disabled={queryCity.isPending}
                 className="query-button"
               >
-                {queryingCity ? 'Querying...' : 'Query City'}
+                {queryCity.isPending ? 'Querying...' : 'Query City'}
               </button>
             </div>
 
@@ -227,10 +218,10 @@ export const PropertyQueries: React.FC = () => {
               </div>
               <button 
                 onClick={handleQueryValuation}
-                disabled={queryingValuation}
+                disabled={queryValuation.isPending}
                 className="query-button"
               >
-                {queryingValuation ? 'Querying...' : 'Query Valuation'}
+                {queryValuation.isPending ? 'Querying...' : 'Query Valuation'}
               </button>
             </div>
           </div>
