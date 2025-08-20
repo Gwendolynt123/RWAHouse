@@ -14,28 +14,31 @@ task("rwa:store-property", "Store property information")
     const rwaHouse: RWAHouse = await ethers.getContractAt("RWAHouse", RWAHouseDeployment.address);
 
     console.log(`Using RWAHouse contract at: ${RWAHouseDeployment.address}`);
-    console.log("Creating encrypted input...");
+    console.log("Creating encrypted inputs for all property data...");
     
-    // Create encrypted input for valuation
+    // Create encrypted inputs for all three parameters (country, city, valuation)
     const input = fhevm.createEncryptedInput(RWAHouseDeployment.address, signer.address);
-    input.add32(taskArgs.valuation);
+    input.add32(taskArgs.country);  // Index 0
+    input.add32(taskArgs.city);     // Index 1
+    input.add32(taskArgs.valuation); // Index 2
     const encryptedInput = await input.encrypt();
 
     console.log("Storing property information...");
     
     const tx = await rwaHouse.storePropertyInfo(
-      taskArgs.country,
-      taskArgs.city,
-      encryptedInput.handles[0],
+      encryptedInput.handles[0], // encrypted country
+      encryptedInput.handles[1], // encrypted city
+      encryptedInput.handles[2], // encrypted valuation
       encryptedInput.inputProof
     );
 
     const receipt = await tx.wait();
     console.log(`Property stored! Transaction hash: ${receipt?.hash}`);
     console.log(`Property owner: ${signer.address}`);
-    console.log(`Country: ${taskArgs.country}`);
-    console.log(`City: ${taskArgs.city}`);
+    console.log(`Country: ${taskArgs.country} (encrypted)`);
+    console.log(`City: ${taskArgs.city} (encrypted)`);
     console.log(`Valuation: ${taskArgs.valuation} (encrypted)`);
+    console.log("Note: All property data is now encrypted and can only be decrypted by the owner.");
   });
 
 task("rwa:get-property", "Get property information")
@@ -51,40 +54,133 @@ task("rwa:get-property", "Get property information")
     console.log(`Getting property info for owner: ${taskArgs.owner}`);
 
     try {
-      const [country, city, encryptedValuation, exists] = await rwaHouse.getPropertyInfo(taskArgs.owner);
+      const [encryptedCountry, encryptedCity, encryptedValuation, exists] = await rwaHouse.getPropertyInfo(taskArgs.owner);
       
       console.log("Property Information:");
-      console.log(`  Country: ${country}`);
-      console.log(`  City: ${city}`);
-      console.log(`  Exists: ${exists}`);
+      console.log(`  Encrypted Country: ${encryptedCountry.toString()}`);
+      console.log(`  Encrypted City: ${encryptedCity.toString()}`);
       console.log(`  Encrypted Valuation: ${encryptedValuation.toString()}`);
+      console.log(`  Exists: ${exists}`);
       
       if (taskArgs.owner.toLowerCase() === signer.address.toLowerCase()) {
-        console.log("Note: Valuation is encrypted. Only the owner can decrypt it using the frontend.");
+        console.log("Note: All property data (country, city, valuation) is encrypted. Only the owner can decrypt it using the frontend.");
+      } else {
+        console.log("Note: You can only view encrypted handles. To decrypt, you need to be the owner or have authorization from the owner.");
       }
     } catch (error: any) {
       console.log(`Error: ${error.message}`);
     }
   });
 
-task("rwa:get-public-property", "Get public property information")
+task("rwa:get-location", "Get encrypted property location information")
   .addParam("owner", "Property owner address")
   .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
     const { ethers, deployments } = hre;
+    const [signer] = await ethers.getSigners();
 
     const RWAHouseDeployment = await deployments.get("RWAHouse");
     const rwaHouse: RWAHouse = await ethers.getContractAt("RWAHouse", RWAHouseDeployment.address);
 
     console.log(`Using RWAHouse contract at: ${RWAHouseDeployment.address}`);
-    console.log(`Getting public property info for owner: ${taskArgs.owner}`);
+    console.log(`Getting property location for owner: ${taskArgs.owner}`);
 
     try {
-      const [country, city, exists] = await rwaHouse.getPublicPropertyInfo(taskArgs.owner);
+      const [encryptedCountry, encryptedCity, exists] = await rwaHouse.getPropertyLocation(taskArgs.owner);
       
-      console.log("Public Property Information:");
-      console.log(`  Country: ${country}`);
-      console.log(`  City: ${city}`);
+      console.log("Property Location Information:");
+      console.log(`  Encrypted Country: ${encryptedCountry.toString()}`);
+      console.log(`  Encrypted City: ${encryptedCity.toString()}`);
       console.log(`  Exists: ${exists}`);
+      
+      if (taskArgs.owner.toLowerCase() === signer.address.toLowerCase()) {
+        console.log("Note: Location data is encrypted. Only you can decrypt it using the frontend.");
+      } else {
+        console.log("Note: You can only view encrypted handles. To decrypt, you need authorization from the owner.");
+      }
+    } catch (error: any) {
+      console.log(`Error: ${error.message}`);
+    }
+  });
+
+task("rwa:get-country", "Get encrypted country information")
+  .addParam("owner", "Property owner address")
+  .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
+    const { ethers, deployments } = hre;
+    const [signer] = await ethers.getSigners();
+
+    const RWAHouseDeployment = await deployments.get("RWAHouse");
+    const rwaHouse: RWAHouse = await ethers.getContractAt("RWAHouse", RWAHouseDeployment.address);
+
+    console.log(`Using RWAHouse contract at: ${RWAHouseDeployment.address}`);
+    console.log(`Getting encrypted country for owner: ${taskArgs.owner}`);
+
+    try {
+      const encryptedCountry = await rwaHouse.getPropertyCountry(taskArgs.owner);
+      
+      console.log("Property Country Information:");
+      console.log(`  Encrypted Country: ${encryptedCountry.toString()}`);
+      
+      if (taskArgs.owner.toLowerCase() === signer.address.toLowerCase()) {
+        console.log("Note: Country data is encrypted. Only you can decrypt it using the frontend.");
+      } else {
+        console.log("Note: You can only view encrypted handles. To decrypt, you need authorization from the owner.");
+      }
+    } catch (error: any) {
+      console.log(`Error: ${error.message}`);
+    }
+  });
+
+task("rwa:get-city", "Get encrypted city information")
+  .addParam("owner", "Property owner address")
+  .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
+    const { ethers, deployments } = hre;
+    const [signer] = await ethers.getSigners();
+
+    const RWAHouseDeployment = await deployments.get("RWAHouse");
+    const rwaHouse: RWAHouse = await ethers.getContractAt("RWAHouse", RWAHouseDeployment.address);
+
+    console.log(`Using RWAHouse contract at: ${RWAHouseDeployment.address}`);
+    console.log(`Getting encrypted city for owner: ${taskArgs.owner}`);
+
+    try {
+      const encryptedCity = await rwaHouse.getPropertyCity(taskArgs.owner);
+      
+      console.log("Property City Information:");
+      console.log(`  Encrypted City: ${encryptedCity.toString()}`);
+      
+      if (taskArgs.owner.toLowerCase() === signer.address.toLowerCase()) {
+        console.log("Note: City data is encrypted. Only you can decrypt it using the frontend.");
+      } else {
+        console.log("Note: You can only view encrypted handles. To decrypt, you need authorization from the owner.");
+      }
+    } catch (error: any) {
+      console.log(`Error: ${error.message}`);
+    }
+  });
+
+task("rwa:get-valuation", "Get encrypted valuation information")
+  .addParam("owner", "Property owner address")
+  .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
+    const { ethers, deployments } = hre;
+    const [signer] = await ethers.getSigners();
+
+    const RWAHouseDeployment = await deployments.get("RWAHouse");
+    const rwaHouse: RWAHouse = await ethers.getContractAt("RWAHouse", RWAHouseDeployment.address);
+
+    console.log(`Using RWAHouse contract at: ${RWAHouseDeployment.address}`);
+    console.log(`Getting encrypted valuation for owner: ${taskArgs.owner}`);
+
+    try {
+      const encryptedValuation = await rwaHouse.getPropertyValuation(taskArgs.owner);
+      
+      console.log("Property Valuation Information:");
+      console.log(`  Encrypted Valuation: ${encryptedValuation.toString()}`);
+      
+      if (taskArgs.owner.toLowerCase() === signer.address.toLowerCase()) {
+        console.log("Note: Valuation data is encrypted. Only you can decrypt it using the frontend.");
+      } else {
+        console.log("Note: You can only view encrypted handles. To decrypt, you need authorization from the owner.");
+      }
     } catch (error: any) {
       console.log(`Error: ${error.message}`);
     }
@@ -208,6 +304,86 @@ task("rwa:has-property", "Check if an address has property")
     try {
       const hasProperty = await rwaHouse.hasProperty(taskArgs.owner);
       console.log(`Has property: ${hasProperty}`);
+    } catch (error: any) {
+      console.log(`Error: ${error.message}`);
+    }
+  });
+
+task("rwa:update-location", "Update property location (country and city)")
+  .addParam("country", "New country code (number)", 0, types.int)
+  .addParam("city", "New city code (number)", 0, types.int)
+  .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
+    const { ethers, fhevm, deployments } = hre;
+    const [signer] = await ethers.getSigners();
+
+    const RWAHouseDeployment = await deployments.get("RWAHouse");
+    const rwaHouse: RWAHouse = await ethers.getContractAt("RWAHouse", RWAHouseDeployment.address);
+
+    console.log(`Using RWAHouse contract at: ${RWAHouseDeployment.address}`);
+    console.log("Creating encrypted inputs for location update...");
+    
+    // Create encrypted inputs for country and city
+    const input = fhevm.createEncryptedInput(RWAHouseDeployment.address, signer.address);
+    input.add32(taskArgs.country);  // Index 0
+    input.add32(taskArgs.city);     // Index 1
+    const encryptedInput = await input.encrypt();
+
+    console.log("Updating property location...");
+
+    try {
+      const tx = await rwaHouse.updatePropertyLocation(
+        encryptedInput.handles[0], // encrypted country
+        encryptedInput.handles[1], // encrypted city
+        encryptedInput.inputProof
+      );
+
+      const receipt = await tx.wait();
+      console.log(`Location updated! Transaction hash: ${receipt?.hash}`);
+      console.log(`Property owner: ${signer.address}`);
+      console.log(`New country: ${taskArgs.country} (encrypted)`);
+      console.log(`New city: ${taskArgs.city} (encrypted)`);
+    } catch (error: any) {
+      console.log(`Error: ${error.message}`);
+    }
+  });
+
+task("rwa:update-complete", "Update complete property information (country, city, and valuation)")
+  .addParam("country", "New country code (number)", 0, types.int)
+  .addParam("city", "New city code (number)", 0, types.int)
+  .addParam("valuation", "New property valuation (number)", 0, types.int)
+  .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
+    const { ethers, fhevm, deployments } = hre;
+    const [signer] = await ethers.getSigners();
+
+    const RWAHouseDeployment = await deployments.get("RWAHouse");
+    const rwaHouse: RWAHouse = await ethers.getContractAt("RWAHouse", RWAHouseDeployment.address);
+
+    console.log(`Using RWAHouse contract at: ${RWAHouseDeployment.address}`);
+    console.log("Creating encrypted inputs for complete property update...");
+    
+    // Create encrypted inputs for all three parameters
+    const input = fhevm.createEncryptedInput(RWAHouseDeployment.address, signer.address);
+    input.add32(taskArgs.country);   // Index 0
+    input.add32(taskArgs.city);      // Index 1
+    input.add32(taskArgs.valuation); // Index 2
+    const encryptedInput = await input.encrypt();
+
+    console.log("Updating complete property information...");
+
+    try {
+      const tx = await rwaHouse.updateCompletePropertyInfo(
+        encryptedInput.handles[0], // encrypted country
+        encryptedInput.handles[1], // encrypted city
+        encryptedInput.handles[2], // encrypted valuation
+        encryptedInput.inputProof
+      );
+
+      const receipt = await tx.wait();
+      console.log(`Complete property information updated! Transaction hash: ${receipt?.hash}`);
+      console.log(`Property owner: ${signer.address}`);
+      console.log(`New country: ${taskArgs.country} (encrypted)`);
+      console.log(`New city: ${taskArgs.city} (encrypted)`);
+      console.log(`New valuation: ${taskArgs.valuation} (encrypted)`);
     } catch (error: any) {
       console.log(`Error: ${error.message}`);
     }
