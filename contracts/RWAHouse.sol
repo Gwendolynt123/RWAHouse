@@ -5,9 +5,18 @@ import {FHE, euint32, externalEuint32, ebool} from "@fhevm/solidity/lib/FHE.sol"
 import {SepoliaConfig} from "@fhevm/solidity/config/ZamaConfig.sol";
 
 /// @title RWAHouse - Real World Asset House Information Management
-/// @notice This contract allows property owners to store encrypted property information on-chain
+/// @notice This contract allows project administrators to store encrypted property information for users on-chain
 /// @dev Uses Zama's FHE technology to encrypt property data that only the owner can decrypt
 contract RWAHouse is SepoliaConfig {
+    
+    /// @notice Address of the project administrator (deployer)
+    address public immutable projectOwner;
+    
+    /// @notice Modifier to restrict access to project owner only
+    modifier onlyProjectOwner() {
+        require(msg.sender == projectOwner, "Only project owner can call this function");
+        _;
+    }
     
     /// @notice Structure to store encrypted property information
     struct PropertyInfo {
@@ -47,6 +56,9 @@ contract RWAHouse is SepoliaConfig {
     /// @notice Event emitted when property information is stored
     event PropertyStored(address indexed owner);
     
+    /// @notice Event emitted when property information is stored by project owner
+    event PropertyStoredByProject(address indexed projectOwner, address indexed userAddress);
+    
     /// @notice Event emitted when authorization is granted
     event AuthorizationGranted(address indexed owner, address indexed authorized);
     
@@ -62,39 +74,50 @@ contract RWAHouse is SepoliaConfig {
     /// @notice Event emitted when a query result is ready
     event QueryResultReady(uint256 indexed requestId, bool result);
     
-    /// @notice Store encrypted property information bound to the sender's wallet address
+    /// @notice Constructor sets the project owner to the deployer
+    constructor() {
+        projectOwner = msg.sender;
+    }
+    
+    /// @notice Store encrypted property information bound to the specified user's wallet address
+    /// @param userAddress The wallet address of the property owner
     /// @param encryptedCountry The encrypted country code where the property is located
     /// @param encryptedCity The encrypted city code where the property is located
     /// @param encryptedValuation The encrypted property valuation
     /// @param inputProof The proof for the encrypted input
     function storePropertyInfo(
+        address userAddress,
         externalEuint32 encryptedCountry,
         externalEuint32 encryptedCity,
         externalEuint32 encryptedValuation,
         bytes calldata inputProof
-    ) external {
+    ) external onlyProjectOwner {
         // Convert external encrypted inputs to internal encrypted values
         euint32 country = FHE.fromExternal(encryptedCountry, inputProof);
         euint32 city = FHE.fromExternal(encryptedCity, inputProof);
         euint32 valuation = FHE.fromExternal(encryptedValuation, inputProof);
         
-        // Store the property information
-        properties[msg.sender] = PropertyInfo({
+        require(userAddress != address(0), "Invalid user address");
+        require(!properties[userAddress].exists, "Property already exists for this user");
+        
+        // Store the property information for the specified user
+        properties[userAddress] = PropertyInfo({
             country: country,
             city: city,
             valuation: valuation,
             exists: true
         });
         
-        // Grant access permissions
+        // Grant access permissions to both contract and user
         FHE.allowThis(country);
-        FHE.allow(country, msg.sender);
+        FHE.allow(country, userAddress);
         FHE.allowThis(city);
-        FHE.allow(city, msg.sender);
+        FHE.allow(city, userAddress);
         FHE.allowThis(valuation);
-        FHE.allow(valuation, msg.sender);
+        FHE.allow(valuation, userAddress);
         
-        emit PropertyStored(msg.sender);
+        emit PropertyStored(userAddress);
+        emit PropertyStoredByProject(msg.sender, userAddress);
     }
     
     /// @notice Get property information for a specific owner
