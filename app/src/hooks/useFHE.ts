@@ -5,14 +5,11 @@ import type { FhevmInstanceConfig } from "@zama-fhe/relayer-sdk/web";
 
 export const useFHE = () => {
   const [instance, setInstance] = useState<FhevmInstance | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
 
   const initFHE = (provider: any, chainId: any) => {
     const initializeFHE = async () => {
       try {
-        setIsLoading(true);
         setError(null);
         console.log("init FHE", provider, chainId);
 
@@ -28,9 +25,7 @@ export const useFHE = () => {
         console.error('Failed to initialize FHE:', err);
         setError(err instanceof Error ? err.message : 'Failed to initialize FHE');
       } finally {
-        setIsLoading(false);
         console.log("FHE init success");
-
       }
     };
 
@@ -91,7 +86,6 @@ export const useFHE = () => {
 
   return {
     instance,
-    isLoading,
     error,
     createEncryptedInput,
     userDecrypt,
