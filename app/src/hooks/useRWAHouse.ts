@@ -61,12 +61,12 @@ export const useRWAHouse = () => {
   const updateValuation = useWriteContract();
 
   // Helper functions to call write contracts with proper parameters
-  const writeStoreProperty = (args: any[]) => {
+  const writeStoreProperty = (userAddress: string, args: any[]) => {
     storeProperty.writeContract({
       address: getContractAddress() as `0x${string}`,
       abi: RWA_HOUSE_ABI,
       functionName: 'storePropertyInfo',
-      args,
+      args: [userAddress, ...args],
     });
   };
 

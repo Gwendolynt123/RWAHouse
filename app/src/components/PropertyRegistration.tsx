@@ -4,6 +4,7 @@ import { useFHE } from '../hooks/useFHE';
 import { useRWAHouse } from '../hooks/useRWAHouse';
 
 interface PropertyData {
+  userAddress: string;
   country: number;
   city: number;
   valuation: number;
@@ -15,6 +16,7 @@ export const PropertyRegistration: React.FC = () => {
   const { storeProperty, writeStoreProperty, contractAddress } = useRWAHouse();
 
   const [formData, setFormData] = useState<PropertyData>({
+    userAddress: '',
     country: 0,
     city: 0,
     valuation: 0,
@@ -23,11 +25,18 @@ export const PropertyRegistration: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (field: keyof PropertyData, value: string) => {
-    const numValue = parseInt(value) || 0;
-    setFormData(prev => ({
-      ...prev,
-      [field]: numValue,
-    }));
+    if (field === 'userAddress') {
+      setFormData(prev => ({
+        ...prev,
+        [field]: value,
+      }));
+    } else {
+      const numValue = parseInt(value) || 0;
+      setFormData(prev => ({
+        ...prev,
+        [field]: numValue,
+      }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,8 +47,14 @@ export const PropertyRegistration: React.FC = () => {
       return;
     }
 
-    if (formData.country === 0 || formData.city === 0 || formData.valuation === 0) {
+    if (!formData.userAddress || formData.country === 0 || formData.city === 0 || formData.valuation === 0) {
       alert('Please fill in all fields with valid values');
+      return;
+    }
+
+    // Validate Ethereum address format
+    if (!/^0x[a-fA-F0-9]{40}$/.test(formData.userAddress)) {
+      alert('Please enter a valid Ethereum address');
       return;
     }
 
@@ -57,8 +72,8 @@ export const PropertyRegistration: React.FC = () => {
       // Encrypt the input
       const encryptedInput = await input.encrypt();
 
-      // Call the contract
-      writeStoreProperty([
+      // Call the contract with user address
+      writeStoreProperty(formData.userAddress, [
         encryptedInput.handles[0], // country
         encryptedInput.handles[1], // city
         encryptedInput.handles[2], // valuation
@@ -88,6 +103,20 @@ export const PropertyRegistration: React.FC = () => {
       <p>Store your property information securely on the blockchain using encrypted data.</p>
       
       <form onSubmit={handleSubmit} className="property-form">
+        <div className="form-group">
+          <label htmlFor="userAddress">User Address:</label>
+          <input
+            type="text"
+            id="userAddress"
+            value={formData.userAddress}
+            onChange={(e) => handleInputChange('userAddress', e.target.value)}
+            placeholder="0x..."
+            pattern="^0x[a-fA-F0-9]{40}$"
+            required
+          />
+          <small>Enter the Ethereum address for whom to store property information</small>
+        </div>
+
         <div className="form-group">
           <label htmlFor="country">Country Code:</label>
           <input
