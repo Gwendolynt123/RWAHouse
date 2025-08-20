@@ -1,7 +1,7 @@
 export const CONTRACT_ADDRESSES = {
   // Update these addresses after deployment
   localhost: '0x5FbDB2315678afecb367f032d93F642f64180aa3', // Default hardhat first contract address
-  sepolia: '0x81FBfE76bae1bec525bD6A5a8950Ff2F38f75FdD', // Add deployed contract address on Sepolia
+  sepolia: '0x555D71AD591EF7afE9fa9BcAeDf3A086C93deC73', // Add deployed contract address on Sepolia
 } as const;
 
 export const RWA_HOUSE_ABI = [

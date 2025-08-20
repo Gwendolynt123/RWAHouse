@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAccount, usePublicClient, useChainId } from 'wagmi';
-import { useFHE } from '../hooks/useFHE';
+import { useFHE } from '../contexts/FHEContext';
 import { useRWAHouse } from '../hooks/useRWAHouse';
 
 interface PropertyData {
@@ -14,7 +14,7 @@ export const PropertyRegistration: React.FC = () => {
   const { address } = useAccount();
   const publicClient = usePublicClient();
   const chainId = useChainId();
-  const { createEncryptedInput, error: fheError, initFHE, instance: fheInstance } = useFHE();
+  const { createEncryptedInput, error: fheError, initFHE, instance: fheInstance, isInitializing } = useFHE();
   const { storeProperty, writeStoreProperty, contractAddress } = useRWAHouse();
 
   const [formData, setFormData] = useState<PropertyData>({
@@ -37,8 +37,8 @@ export const PropertyRegistration: React.FC = () => {
   }, [contractAddress]);
 
   useEffect(() => {
-    console.log(`🔍 FHE is null: ${fheInstance == null}, FHE error: ${fheError || 'None'}`);
-  }, [fheInstance, fheError]);
+    console.log(`🔍 FHE is null: ${fheInstance == null}, FHE error: ${fheError || 'None'}, FHE initializing: ${isInitializing}`);
+  }, [fheInstance, fheError, isInitializing]);
 
   useEffect(() => {
     if (storeProperty.error) {
@@ -169,7 +169,12 @@ export const PropertyRegistration: React.FC = () => {
       {fheInstance == null ?
         <div className="property-registration">
           <h2>Property Registration</h2>
-          <button onClick={() => initFHE(publicClient, chainId)}>Init FHE</button>
+          <button 
+            onClick={() => initFHE(publicClient, chainId)}
+            disabled={isInitializing}
+          >
+            {isInitializing ? 'Initializing FHE...' : 'Init FHE'}
+          </button>
 
         </div> :
         <div className="property-registration">
@@ -295,7 +300,7 @@ export const PropertyRegistration: React.FC = () => {
               <ul style={{ margin: '5px 0', paddingLeft: '20px' }}>
                 <li>Wallet: {address ? `✅ Connected (${address.slice(0, 6)}...${address.slice(-4)})` : '❌ Not connected'}</li>
                 <li>Contract: {contractAddress ? `✅ Available (${contractAddress.slice(0, 6)}...${contractAddress.slice(-4)})` : '❌ Not available'}</li>
-                <li>FHE: {fheInstance == null ? '🔄 Loading' : fheError ? `❌ Error: ${fheError}` : '✅ Ready'}</li>
+                <li>FHE: {fheInstance == null ? (isInitializing ? '🔄 Initializing' : '⏳ Not initialized') : fheError ? `❌ Error: ${fheError}` : '✅ Ready'}</li>
                 <li>Transaction: {storeProperty.isPending ? '🔄 Pending' : storeProperty.isSuccess ? `✅ Success (${storeProperty.data})` : storeProperty.error ? `❌ Failed: ${storeProperty.error.message}` : '⏳ Ready'}</li>
               </ul>
             </div>

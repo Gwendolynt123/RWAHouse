@@ -60,6 +60,19 @@ export const useRWAHouse = () => {
   // Update valuation
   const updateValuation = useWriteContract();
 
+  // Get property info for decryption (using existing function)
+  const useGetPropertyInfoForDecryption = (address?: string) => {
+    return useReadContract({
+      address: getContractAddress() as `0x${string}`,
+      abi: RWA_HOUSE_ABI,
+      functionName: 'getPropertyInfo',
+      args: address ? [address] : undefined,
+      query: {
+        enabled: !!address,
+      },
+    });
+  };
+
   // Helper functions to call write contracts with proper parameters
   const writeStoreProperty = (userAddress: string, args: any[]) => {
     const contractAddress = getContractAddress();
@@ -145,6 +158,7 @@ export const useRWAHouse = () => {
   return {
     useHasProperty,
     useIsAuthorized,
+    useGetPropertyInfoForDecryption,
     storeProperty,
     authorizeAccess,
     revokeAccess,
