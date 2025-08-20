@@ -8,6 +8,7 @@ task("rwa:store-property", "Store property information")
   .addParam("valuation", "Property valuation (number)", 0, types.int)
   .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
     const { ethers, fhevm, deployments } = hre;
+    await fhevm.initializeCLIApi()
     const [signer] = await ethers.getSigners();
 
     const RWAHouseDeployment = await deployments.get("RWAHouse");
