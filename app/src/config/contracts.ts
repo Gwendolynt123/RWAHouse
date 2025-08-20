@@ -1,17 +1,17 @@
 export const CONTRACT_ADDRESSES = {
   // Update these addresses after deployment
   localhost: '0x5FbDB2315678afecb367f032d93F642f64180aa3', // Default hardhat first contract address
-  sepolia: '', // Add deployed contract address on Sepolia
+  sepolia: '0xa933487dBFe169a3193C4aBdfAda625995982a02', // Add deployed contract address on Sepolia
 } as const;
 
 export const RWA_HOUSE_ABI = [
   // Property Management Functions
   {
     "inputs": [
-      {"name": "encryptedCountry", "type": "uint256"},
-      {"name": "encryptedCity", "type": "uint256"},
-      {"name": "encryptedValuation", "type": "uint256"},
-      {"name": "inputProof", "type": "bytes"}
+      { "name": "encryptedCountry", "type": "uint256" },
+      { "name": "encryptedCity", "type": "uint256" },
+      { "name": "encryptedValuation", "type": "uint256" },
+      { "name": "inputProof", "type": "bytes" }
     ],
     "name": "storePropertyInfo",
     "outputs": [],
@@ -20,25 +20,25 @@ export const RWA_HOUSE_ABI = [
   },
   {
     "inputs": [
-      {"name": "owner", "type": "address"}
+      { "name": "owner", "type": "address" }
     ],
     "name": "getPropertyInfo",
     "outputs": [
-      {"name": "country", "type": "uint256"},
-      {"name": "city", "type": "uint256"},
-      {"name": "valuation", "type": "uint256"},
-      {"name": "exists", "type": "bool"}
+      { "name": "country", "type": "uint256" },
+      { "name": "city", "type": "uint256" },
+      { "name": "valuation", "type": "uint256" },
+      { "name": "exists", "type": "bool" }
     ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      {"name": "owner", "type": "address"}
+      { "name": "owner", "type": "address" }
     ],
     "name": "hasProperty",
     "outputs": [
-      {"name": "", "type": "bool"}
+      { "name": "", "type": "bool" }
     ],
     "stateMutability": "view",
     "type": "function"
@@ -46,7 +46,7 @@ export const RWA_HOUSE_ABI = [
   // Authorization Functions
   {
     "inputs": [
-      {"name": "authorized", "type": "address"}
+      { "name": "authorized", "type": "address" }
     ],
     "name": "authorizeAccess",
     "outputs": [],
@@ -55,7 +55,7 @@ export const RWA_HOUSE_ABI = [
   },
   {
     "inputs": [
-      {"name": "authorized", "type": "address"}
+      { "name": "authorized", "type": "address" }
     ],
     "name": "revokeAccess",
     "outputs": [],
@@ -64,12 +64,12 @@ export const RWA_HOUSE_ABI = [
   },
   {
     "inputs": [
-      {"name": "owner", "type": "address"},
-      {"name": "accessor", "type": "address"}
+      { "name": "owner", "type": "address" },
+      { "name": "accessor", "type": "address" }
     ],
     "name": "isAuthorized",
     "outputs": [
-      {"name": "", "type": "bool"}
+      { "name": "", "type": "bool" }
     ],
     "stateMutability": "view",
     "type": "function"
@@ -77,8 +77,8 @@ export const RWA_HOUSE_ABI = [
   // Query Functions
   {
     "inputs": [
-      {"name": "requester", "type": "address"},
-      {"name": "queryType", "type": "uint8"}
+      { "name": "requester", "type": "address" },
+      { "name": "queryType", "type": "uint8" }
     ],
     "name": "authorizeQuery",
     "outputs": [],
@@ -87,36 +87,36 @@ export const RWA_HOUSE_ABI = [
   },
   {
     "inputs": [
-      {"name": "propertyOwner", "type": "address"},
-      {"name": "countryCode", "type": "uint32"}
+      { "name": "propertyOwner", "type": "address" },
+      { "name": "countryCode", "type": "uint32" }
     ],
     "name": "queryIsInCountry",
     "outputs": [
-      {"name": "requestId", "type": "uint256"}
+      { "name": "requestId", "type": "uint256" }
     ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [
-      {"name": "propertyOwner", "type": "address"},
-      {"name": "cityCode", "type": "uint32"}
+      { "name": "propertyOwner", "type": "address" },
+      { "name": "cityCode", "type": "uint32" }
     ],
     "name": "queryIsInCity",
     "outputs": [
-      {"name": "requestId", "type": "uint256"}
+      { "name": "requestId", "type": "uint256" }
     ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [
-      {"name": "propertyOwner", "type": "address"},
-      {"name": "minValue", "type": "uint32"}
+      { "name": "propertyOwner", "type": "address" },
+      { "name": "minValue", "type": "uint32" }
     ],
     "name": "queryIsAboveValue",
     "outputs": [
-      {"name": "requestId", "type": "uint256"}
+      { "name": "requestId", "type": "uint256" }
     ],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -124,8 +124,8 @@ export const RWA_HOUSE_ABI = [
   // Update Functions
   {
     "inputs": [
-      {"name": "newEncryptedValuation", "type": "uint256"},
-      {"name": "inputProof", "type": "bytes"}
+      { "name": "newEncryptedValuation", "type": "uint256" },
+      { "name": "inputProof", "type": "bytes" }
     ],
     "name": "updatePropertyValuation",
     "outputs": [],
@@ -136,7 +136,7 @@ export const RWA_HOUSE_ABI = [
   {
     "anonymous": false,
     "inputs": [
-      {"indexed": true, "name": "owner", "type": "address"}
+      { "indexed": true, "name": "owner", "type": "address" }
     ],
     "name": "PropertyStored",
     "type": "event"
@@ -144,8 +144,8 @@ export const RWA_HOUSE_ABI = [
   {
     "anonymous": false,
     "inputs": [
-      {"indexed": true, "name": "owner", "type": "address"},
-      {"indexed": true, "name": "authorized", "type": "address"}
+      { "indexed": true, "name": "owner", "type": "address" },
+      { "indexed": true, "name": "authorized", "type": "address" }
     ],
     "name": "AuthorizationGranted",
     "type": "event"
@@ -153,10 +153,10 @@ export const RWA_HOUSE_ABI = [
   {
     "anonymous": false,
     "inputs": [
-      {"indexed": true, "name": "requester", "type": "address"},
-      {"indexed": true, "name": "owner", "type": "address"},
-      {"indexed": false, "name": "queryType", "type": "uint8"},
-      {"indexed": false, "name": "requestId", "type": "uint256"}
+      { "indexed": true, "name": "requester", "type": "address" },
+      { "indexed": true, "name": "owner", "type": "address" },
+      { "indexed": false, "name": "queryType", "type": "uint8" },
+      { "indexed": false, "name": "requestId", "type": "uint256" }
     ],
     "name": "QueryRequested",
     "type": "event"
@@ -164,8 +164,8 @@ export const RWA_HOUSE_ABI = [
   {
     "anonymous": false,
     "inputs": [
-      {"indexed": true, "name": "requestId", "type": "uint256"},
-      {"indexed": false, "name": "result", "type": "bool"}
+      { "indexed": true, "name": "requestId", "type": "uint256" },
+      { "indexed": false, "name": "result", "type": "bool" }
     ],
     "name": "QueryResultReady",
     "type": "event"
