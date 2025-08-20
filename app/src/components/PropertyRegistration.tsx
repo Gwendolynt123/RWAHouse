@@ -14,7 +14,7 @@ export const PropertyRegistration: React.FC = () => {
   const { address } = useAccount();
   const publicClient = usePublicClient();
   const chainId = useChainId();
-  const { createEncryptedInput, isLoading: fheLoading, error: fheError,initFHE } = useFHE();
+  const { createEncryptedInput, isLoading: fheLoading, error: fheError, initFHE } = useFHE();
   const { storeProperty, writeStoreProperty, contractAddress } = useRWAHouse();
 
   const [formData, setFormData] = useState<PropertyData>({
@@ -69,10 +69,10 @@ export const PropertyRegistration: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     console.log('🔍 Form submission started');
     console.log(`🔍 Current form data: ${JSON.stringify(formData)}`);
-    
+
     if (!address || !contractAddress) {
       console.log('❌ Missing wallet or contract address');
       alert('Please connect your wallet');
@@ -99,12 +99,12 @@ export const PropertyRegistration: React.FC = () => {
       // Create encrypted input
       console.log('🔄 Creating encrypted input...');
       const input = createEncryptedInput(contractAddress, address);
-      
+
       // Add encrypted values
       console.log(`🔄 Adding encrypted values - country:${formData.country}, city:${formData.city}, valuation:${formData.valuation}`);
-      input.add32(BigInt(formData.country));
-      input.add32(BigInt(formData.city));
-      input.add32(BigInt(formData.valuation));
+      input.add32(formData.country);
+      input.add32(formData.city);
+      input.add32(formData.valuation);
 
       // Encrypt the input
       console.log('🔄 Starting encryption...');
@@ -113,23 +113,29 @@ export const PropertyRegistration: React.FC = () => {
       console.log(`🔍 Encrypted handles count: ${encryptedInput.handles.length}`);
 
       // Convert Uint8Array handles to proper uint256 format
-      const convertHandleToUint256 = (handle: Uint8Array): string => {
-        // Convert Uint8Array to hex string, then to BigInt
-        const hexString = '0x' + Array.from(handle).map(b => b.toString(16).padStart(2, '0')).join('');
-        return hexString;
+      const convertHandleToUint256 = (handle: any): string => {
+        let formattedHandle: string;
+        if (typeof handle === 'string') {
+          formattedHandle = handle.startsWith('0x') ? handle : `0x${handle}`;
+        } else if (handle instanceof Uint8Array) {
+          formattedHandle = `0x${Array.from(handle).map(b => b.toString(16).padStart(2, '0')).join('')}`;
+        } else {
+          formattedHandle = `0x${handle.toString()}`;
+        }
+        return formattedHandle
       };
 
       console.log('🔄 Converting handles to uint256 format...');
       const handle1 = convertHandleToUint256(encryptedInput.handles[0]);
-      const handle2 = convertHandleToUint256(encryptedInput.handles[1]); 
+      const handle2 = convertHandleToUint256(encryptedInput.handles[1]);
       const handle3 = convertHandleToUint256(encryptedInput.handles[2]);
-      
-      console.log(`🔍 Converted handles: ${handle1.slice(0,10)}..., ${handle2.slice(0,10)}..., ${handle3.slice(0,10)}...`);
+
+      console.log(`🔍 Converted handles: ${handle1.slice(0, 10)}..., ${handle2.slice(0, 10)}..., ${handle3.slice(0, 10)}...`);
 
       // Call the contract with user address
       console.log(`🔄 Calling contract function for user: ${formData.userAddress}`);
       let formattedProof: string;
-      let proof:any= encryptedInput.inputProof
+      let proof: any = encryptedInput.inputProof
       if (typeof proof === 'string') {
         formattedProof = proof.startsWith('0x') ? proof : `0x${proof}`;
       } else if (proof instanceof Uint8Array) {
@@ -137,14 +143,14 @@ export const PropertyRegistration: React.FC = () => {
       } else {
         formattedProof = `0x${proof.toString()}`;
       }
-      
+
       writeStoreProperty(formData.userAddress, [
         handle1, // country
         handle2, // city
         handle3, // valuation
         formattedProof,
       ]);
-      
+
       console.log('✅ Contract call initiated');
 
     } catch (error) {
@@ -161,7 +167,7 @@ export const PropertyRegistration: React.FC = () => {
     return (
       <div className="property-registration">
         <h2>Property Registration</h2>
-        <button onClick={()=>initFHE(publicClient, chainId)}>Init FHE</button>
+        <button onClick={() => initFHE(publicClient, chainId)}>Init FHE</button>
 
       </div>
     );
@@ -228,8 +234,8 @@ export const PropertyRegistration: React.FC = () => {
           <small>Property value in USD</small>
         </div>
 
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           disabled={isSubmitting || storeProperty.isPending || !address}
           className="submit-button"
         >
@@ -242,24 +248,24 @@ export const PropertyRegistration: React.FC = () => {
       )}
 
       {/* Debug Information Panel */}
-      <div className="debug-panel" style={{ 
-        marginTop: '20px', 
-        padding: '15px', 
-        border: '2px solid #007acc', 
-        borderRadius: '8px', 
+      <div className="debug-panel" style={{
+        marginTop: '20px',
+        padding: '15px',
+        border: '2px solid #007acc',
+        borderRadius: '8px',
         backgroundColor: '#f8f9fa',
         fontFamily: 'monospace',
         fontSize: '12px'
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
           <h3 style={{ margin: 0, color: '#007acc' }}>🛠️ Debug Information</h3>
-          <button 
+          <button
             onClick={() => setDebugInfo([])}
-            style={{ 
-              padding: '5px 10px', 
-              fontSize: '10px', 
-              border: '1px solid #007acc', 
-              backgroundColor: 'white', 
+            style={{
+              padding: '5px 10px',
+              fontSize: '10px',
+              border: '1px solid #007acc',
+              backgroundColor: 'white',
               color: '#007acc',
               borderRadius: '4px',
               cursor: 'pointer'
@@ -268,34 +274,34 @@ export const PropertyRegistration: React.FC = () => {
             Clear
           </button>
         </div>
-        
+
         <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
           {debugInfo.length === 0 ? (
             <p style={{ margin: 0, color: '#666' }}>No debug information yet...</p>
           ) : (
             debugInfo.map((info, index) => (
-              <div key={index} style={{ 
-                marginBottom: '5px', 
+              <div key={index} style={{
+                marginBottom: '5px',
                 padding: '2px 0',
-                borderBottom: '1px solid #e9ecef' 
+                borderBottom: '1px solid #e9ecef'
               }}>
                 {info}
               </div>
             ))
           )}
         </div>
-        
+
         {/* Current Status */}
         <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#e9ecef', borderRadius: '4px' }}>
           <strong>Current Status:</strong>
           <ul style={{ margin: '5px 0', paddingLeft: '20px' }}>
-            <li>Wallet: {address ? `✅ Connected (${address.slice(0,6)}...${address.slice(-4)})` : '❌ Not connected'}</li>
-            <li>Contract: {contractAddress ? `✅ Available (${contractAddress.slice(0,6)}...${contractAddress.slice(-4)})` : '❌ Not available'}</li>
+            <li>Wallet: {address ? `✅ Connected (${address.slice(0, 6)}...${address.slice(-4)})` : '❌ Not connected'}</li>
+            <li>Contract: {contractAddress ? `✅ Available (${contractAddress.slice(0, 6)}...${contractAddress.slice(-4)})` : '❌ Not available'}</li>
             <li>FHE: {fheLoading ? '🔄 Loading' : fheError ? `❌ Error: ${fheError}` : '✅ Ready'}</li>
             <li>Transaction: {storeProperty.isPending ? '🔄 Pending' : storeProperty.isSuccess ? `✅ Success (${storeProperty.data})` : storeProperty.error ? `❌ Failed: ${storeProperty.error.message}` : '⏳ Ready'}</li>
           </ul>
         </div>
-        
+
         {/* Additional Error Details */}
         {storeProperty.error && (
           <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#fee', borderRadius: '4px', border: '1px solid #fcc' }}>
