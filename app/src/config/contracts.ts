@@ -8,6 +8,7 @@ export const RWA_HOUSE_ABI = [
   // Property Management Functions
   {
     "inputs": [
+      { "name": "userAddress", "type": "address" },
       { "name": "encryptedCountry", "type": "uint256" },
       { "name": "encryptedCity", "type": "uint256" },
       { "name": "encryptedValuation", "type": "uint256" },

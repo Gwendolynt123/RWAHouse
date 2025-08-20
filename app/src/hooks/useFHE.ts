@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createInstance, initSDK, SepoliaConfig } from '@zama-fhe/relayer-sdk/bundle';
 import type { FhevmInstance } from '@zama-fhe/relayer-sdk/bundle';
+import type { FhevmInstanceConfig } from "@zama-fhe/relayer-sdk/web";
 
 export const useFHE = () => {
   const [instance, setInstance] = useState<FhevmInstance | null>(null);
@@ -12,18 +13,21 @@ export const useFHE = () => {
       try {
         setIsLoading(true);
         setError(null);
-        
+
         // Initialize SDK first
         await initSDK();
-        
-        // Create FHE instance
-        const fheInstance = await createInstance(SepoliaConfig);
+        const fheInstance = await createInstance({
+          ...SepoliaConfig,
+          network: window.ethereum
+        });
         setInstance(fheInstance);
       } catch (err) {
         console.error('Failed to initialize FHE:', err);
         setError(err instanceof Error ? err.message : 'Failed to initialize FHE');
       } finally {
         setIsLoading(false);
+        console.log("FHE init success");
+
       }
     };
 
@@ -50,7 +54,7 @@ export const useFHE = () => {
     if (!instance) {
       throw new Error('FHE instance not initialized');
     }
-    
+
     return instance.userDecrypt(
       handleContractPairs,
       privateKey,
