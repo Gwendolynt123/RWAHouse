@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {FHE, euint32, externalEuint32} from "@fhevm/solidity/lib/FHE.sol";
+import {FHE, euint32, externalEuint32, ebool} from "@fhevm/solidity/lib/FHE.sol";
 import {SepoliaConfig} from "@fhevm/solidity/config/ZamaConfig.sol";
 
 /// @title RWAHouse - Real World Asset House Information Management
@@ -23,6 +23,27 @@ contract RWAHouse is SepoliaConfig {
     /// @notice Mapping to track which addresses are authorized to decrypt a property
     mapping(address => mapping(address => bool)) private authorizations;
     
+    /// @notice Mapping to track single-use query permissions
+    /// @dev propertyOwner => queryContract => queryType => isUsed
+    mapping(address => mapping(address => mapping(uint8 => bool))) private queryUsed;
+    
+    /// @notice Enum for different query types
+    enum QueryType { COUNTRY, CITY, VALUATION }
+    
+    /// @notice Struct to store pending decryption requests
+    struct DecryptionRequest {
+        address requester;
+        address propertyOwner;
+        QueryType queryType;
+        uint32 compareValue;
+        bool isPending;
+        uint256 requestId;
+    }
+    
+    /// @notice Mapping to track decryption requests
+    mapping(uint256 => DecryptionRequest) private decryptionRequests;
+    mapping(address => uint256) private latestRequestId;
+    
     /// @notice Event emitted when property information is stored
     event PropertyStored(address indexed owner);
     
@@ -31,6 +52,15 @@ contract RWAHouse is SepoliaConfig {
     
     /// @notice Event emitted when authorization is revoked
     event AuthorizationRevoked(address indexed owner, address indexed authorized);
+    
+    /// @notice Event emitted when query authorization is granted
+    event QueryAuthorizationGranted(address indexed owner, address indexed requester, QueryType queryType);
+    
+    /// @notice Event emitted when a query is requested
+    event QueryRequested(address indexed requester, address indexed owner, QueryType queryType, uint256 requestId);
+    
+    /// @notice Event emitted when a query result is ready
+    event QueryResultReady(uint256 indexed requestId, bool result);
     
     /// @notice Store encrypted property information bound to the sender's wallet address
     /// @param encryptedCountry The encrypted country code where the property is located
@@ -268,5 +298,221 @@ contract RWAHouse is SepoliaConfig {
     /// @return Whether the property exists
     function hasProperty(address owner) external view returns (bool) {
         return properties[owner].exists;
+    }
+    
+    // ============= QUERY INTERFACES =============
+    
+    /// @notice Grant single-use authorization for a specific query type
+    /// @param requester The address allowed to make the query
+    /// @param queryType The type of query to authorize (0=COUNTRY, 1=CITY, 2=VALUATION)
+    function authorizeQuery(address requester, QueryType queryType) external {
+        require(properties[msg.sender].exists, "Property does not exist");
+        require(requester != address(0), "Invalid requester address");
+        require(!queryUsed[msg.sender][requester][uint8(queryType)], "Query already used");
+        
+        // Mark this query type as available for the requester
+        queryUsed[msg.sender][requester][uint8(queryType)] = false;
+        
+        emit QueryAuthorizationGranted(msg.sender, requester, queryType);
+    }
+    
+    /// @notice Check if property is in a specific country (external interface)
+    /// @param propertyOwner The owner of the property to check
+    /// @param countryCode The country code to compare against
+    /// @return requestId The ID of the decryption request
+    function queryIsInCountry(address propertyOwner, uint32 countryCode) external returns (uint256 requestId) {
+        require(properties[propertyOwner].exists, "Property does not exist");
+        require(!queryUsed[propertyOwner][msg.sender][uint8(QueryType.COUNTRY)], "Query authorization already used");
+        
+        // Mark the query as used
+        queryUsed[propertyOwner][msg.sender][uint8(QueryType.COUNTRY)] = true;
+        
+        // Create encrypted comparison
+        euint32 encryptedCountryCode = FHE.asEuint32(countryCode);
+        ebool isInCountry = FHE.eq(properties[propertyOwner].country, encryptedCountryCode);
+        
+        // Request decryption for the boolean result
+        bytes32[] memory cts = new bytes32[](1);
+        cts[0] = FHE.toBytes32(isInCountry);
+        
+        requestId = FHE.requestDecryption(cts, this.countryQueryCallback.selector);
+        
+        // Store the request details
+        decryptionRequests[requestId] = DecryptionRequest({
+            requester: msg.sender,
+            propertyOwner: propertyOwner,
+            queryType: QueryType.COUNTRY,
+            compareValue: countryCode,
+            isPending: true,
+            requestId: requestId
+        });
+        
+        latestRequestId[msg.sender] = requestId;
+        
+        emit QueryRequested(msg.sender, propertyOwner, QueryType.COUNTRY, requestId);
+        
+        return requestId;
+    }
+    
+    /// @notice Check if property is in a specific city (external interface)
+    /// @param propertyOwner The owner of the property to check
+    /// @param cityCode The city code to compare against
+    /// @return requestId The ID of the decryption request
+    function queryIsInCity(address propertyOwner, uint32 cityCode) external returns (uint256 requestId) {
+        require(properties[propertyOwner].exists, "Property does not exist");
+        require(!queryUsed[propertyOwner][msg.sender][uint8(QueryType.CITY)], "Query authorization already used");
+        
+        // Mark the query as used
+        queryUsed[propertyOwner][msg.sender][uint8(QueryType.CITY)] = true;
+        
+        // Create encrypted comparison
+        euint32 encryptedCityCode = FHE.asEuint32(cityCode);
+        ebool isInCity = FHE.eq(properties[propertyOwner].city, encryptedCityCode);
+        
+        // Request decryption for the boolean result
+        bytes32[] memory cts = new bytes32[](1);
+        cts[0] = FHE.toBytes32(isInCity);
+        
+        requestId = FHE.requestDecryption(cts, this.cityQueryCallback.selector);
+        
+        // Store the request details
+        decryptionRequests[requestId] = DecryptionRequest({
+            requester: msg.sender,
+            propertyOwner: propertyOwner,
+            queryType: QueryType.CITY,
+            compareValue: cityCode,
+            isPending: true,
+            requestId: requestId
+        });
+        
+        latestRequestId[msg.sender] = requestId;
+        
+        emit QueryRequested(msg.sender, propertyOwner, QueryType.CITY, requestId);
+        
+        return requestId;
+    }
+    
+    /// @notice Check if property valuation is above a threshold (external interface)
+    /// @param propertyOwner The owner of the property to check
+    /// @param minValue The minimum valuation threshold
+    /// @return requestId The ID of the decryption request
+    function queryIsAboveValue(address propertyOwner, uint32 minValue) external returns (uint256 requestId) {
+        require(properties[propertyOwner].exists, "Property does not exist");
+        require(!queryUsed[propertyOwner][msg.sender][uint8(QueryType.VALUATION)], "Query authorization already used");
+        
+        // Mark the query as used
+        queryUsed[propertyOwner][msg.sender][uint8(QueryType.VALUATION)] = true;
+        
+        // Create encrypted comparison
+        euint32 encryptedMinValue = FHE.asEuint32(minValue);
+        ebool isAboveValue = FHE.ge(properties[propertyOwner].valuation, encryptedMinValue);
+        
+        // Request decryption for the boolean result
+        bytes32[] memory cts = new bytes32[](1);
+        cts[0] = FHE.toBytes32(isAboveValue);
+        
+        requestId = FHE.requestDecryption(cts, this.valuationQueryCallback.selector);
+        
+        // Store the request details
+        decryptionRequests[requestId] = DecryptionRequest({
+            requester: msg.sender,
+            propertyOwner: propertyOwner,
+            queryType: QueryType.VALUATION,
+            compareValue: minValue,
+            isPending: true,
+            requestId: requestId
+        });
+        
+        latestRequestId[msg.sender] = requestId;
+        
+        emit QueryRequested(msg.sender, propertyOwner, QueryType.VALUATION, requestId);
+        
+        return requestId;
+    }
+    
+    // ============= DECRYPTION CALLBACKS =============
+    
+    /// @notice Callback for country query decryption
+    function countryQueryCallback(
+        uint256 requestId,
+        bool result,
+        bytes[] memory signatures
+    ) public {
+        require(decryptionRequests[requestId].isPending, "Request not pending");
+        FHE.checkSignatures(requestId, signatures);
+        
+        decryptionRequests[requestId].isPending = false;
+        
+        emit QueryResultReady(requestId, result);
+    }
+    
+    /// @notice Callback for city query decryption
+    function cityQueryCallback(
+        uint256 requestId,
+        bool result,
+        bytes[] memory signatures
+    ) public {
+        require(decryptionRequests[requestId].isPending, "Request not pending");
+        FHE.checkSignatures(requestId, signatures);
+        
+        decryptionRequests[requestId].isPending = false;
+        
+        emit QueryResultReady(requestId, result);
+    }
+    
+    /// @notice Callback for valuation query decryption
+    function valuationQueryCallback(
+        uint256 requestId,
+        bool result,
+        bytes[] memory signatures
+    ) public {
+        require(decryptionRequests[requestId].isPending, "Request not pending");
+        FHE.checkSignatures(requestId, signatures);
+        
+        decryptionRequests[requestId].isPending = false;
+        
+        emit QueryResultReady(requestId, result);
+    }
+    
+    // ============= QUERY RESULT FUNCTIONS =============
+    
+    /// @notice Get the result of a query request
+    /// @param requestId The request ID to check
+    /// @return requester The requester address
+    /// @return propertyOwner The property owner address
+    /// @return queryType The query type
+    /// @return compareValue The comparison value used
+    /// @return isPending Whether the request is still pending
+    function getQueryRequest(uint256 requestId) external view returns (
+        address requester,
+        address propertyOwner,
+        QueryType queryType,
+        uint32 compareValue,
+        bool isPending
+    ) {
+        DecryptionRequest memory request = decryptionRequests[requestId];
+        return (
+            request.requester,
+            request.propertyOwner,
+            request.queryType,
+            request.compareValue,
+            request.isPending
+        );
+    }
+    
+    /// @notice Get the latest request ID for an address
+    /// @param requester The address to check
+    /// @return The latest request ID
+    function getLatestRequestId(address requester) external view returns (uint256) {
+        return latestRequestId[requester];
+    }
+    
+    /// @notice Check if a query authorization has been used
+    /// @param propertyOwner The property owner
+    /// @param requester The requester address
+    /// @param queryType The query type to check
+    /// @return Whether the authorization has been used
+    function isQueryUsed(address propertyOwner, address requester, QueryType queryType) external view returns (bool) {
+        return queryUsed[propertyOwner][requester][uint8(queryType)];
     }
 }
