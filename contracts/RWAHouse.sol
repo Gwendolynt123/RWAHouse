@@ -33,7 +33,7 @@ contract RWAHouse is SepoliaConfig {
 
     /// @notice Mapping to track single-use query permissions
     /// @dev propertyOwner => queryContract => queryType => isUsed
-    mapping(address => mapping(address => mapping(uint8 => bool))) private queryUsed;
+    mapping(address => mapping(address => mapping(uint8 => bool))) private queryAuthorized;
 
     /// @notice Enum for different query types
     enum QueryType {
@@ -265,10 +265,10 @@ contract RWAHouse is SepoliaConfig {
     function authorizeQuery(address requester, QueryType queryType) external {
         require(properties[msg.sender].exists, "Property does not exist");
         require(requester != address(0), "Invalid requester address");
-        require(!queryUsed[msg.sender][requester][uint8(queryType)], "Query already used");
+        // require(!queryAuthorized[msg.sender][requester][uint8(queryType)], "Query already use");
 
         // Mark this query type as available for the requester
-        queryUsed[msg.sender][requester][uint8(queryType)] = false;
+        queryAuthorized[msg.sender][requester][uint8(queryType)] = true;
 
         emit QueryAuthorizationGranted(msg.sender, requester, queryType);
     }
@@ -279,10 +279,13 @@ contract RWAHouse is SepoliaConfig {
     /// @return requestId The ID of the decryption request
     function queryIsInCountry(address propertyOwner, uint32 countryCode) external returns (uint256 requestId) {
         require(properties[propertyOwner].exists, "Property does not exist");
-        require(!queryUsed[propertyOwner][msg.sender][uint8(QueryType.COUNTRY)], "Query authorization already used");
+        require(
+            queryAuthorized[propertyOwner][msg.sender][uint8(QueryType.COUNTRY)],
+            "Query authorization already used"
+        );
 
         // Mark the query as used
-        queryUsed[propertyOwner][msg.sender][uint8(QueryType.COUNTRY)] = true;
+        queryAuthorized[propertyOwner][msg.sender][uint8(QueryType.COUNTRY)] = false;
 
         // Create encrypted comparison
         euint32 encryptedCountryCode = FHE.asEuint32(countryCode);
@@ -317,10 +320,10 @@ contract RWAHouse is SepoliaConfig {
     /// @return requestId The ID of the decryption request
     function queryIsInCity(address propertyOwner, uint32 cityCode) external returns (uint256 requestId) {
         require(properties[propertyOwner].exists, "Property does not exist");
-        require(!queryUsed[propertyOwner][msg.sender][uint8(QueryType.CITY)], "Query authorization already used");
+        require(queryAuthorized[propertyOwner][msg.sender][uint8(QueryType.CITY)], "Query authorization already used");
 
         // Mark the query as used
-        queryUsed[propertyOwner][msg.sender][uint8(QueryType.CITY)] = true;
+        queryAuthorized[propertyOwner][msg.sender][uint8(QueryType.CITY)] = false;
 
         // Create encrypted comparison
         euint32 encryptedCityCode = FHE.asEuint32(cityCode);
@@ -355,10 +358,13 @@ contract RWAHouse is SepoliaConfig {
     /// @return requestId The ID of the decryption request
     function queryIsAboveValue(address propertyOwner, uint32 minValue) external returns (uint256 requestId) {
         require(properties[propertyOwner].exists, "Property does not exist");
-        require(!queryUsed[propertyOwner][msg.sender][uint8(QueryType.VALUATION)], "Query authorization already used");
+        require(
+            queryAuthorized[propertyOwner][msg.sender][uint8(QueryType.VALUATION)],
+            "Query authorization already used"
+        );
 
         // Mark the query as used
-        queryUsed[propertyOwner][msg.sender][uint8(QueryType.VALUATION)] = true;
+        queryAuthorized[propertyOwner][msg.sender][uint8(QueryType.VALUATION)] = false;
 
         // Create encrypted comparison
         euint32 encryptedMinValue = FHE.asEuint32(minValue);
@@ -451,7 +457,11 @@ contract RWAHouse is SepoliaConfig {
     /// @param requester The requester address
     /// @param queryType The query type to check
     /// @return Whether the authorization has been used
-    function isQueryUsed(address propertyOwner, address requester, QueryType queryType) external view returns (bool) {
-        return queryUsed[propertyOwner][requester][uint8(queryType)];
+    function isQueryAuthorized(
+        address propertyOwner,
+        address requester,
+        QueryType queryType
+    ) external view returns (bool) {
+        return queryAuthorized[propertyOwner][requester][uint8(queryType)];
     }
 }

@@ -4,21 +4,23 @@ import { RWAHouse } from "../types";
 import { FhevmType } from "@fhevm/hardhat-plugin";
 
 task("rwa:store-property", "Store property information for a user (only project owner can call)")
-  .addParam("useraddress", "User address to store property for")
+  .addParam("callerindex", "User address to store property for")
+  .addParam("userindex", "User address to store property for")
   .addParam("country", "Country code (number)", 0, types.int)
   .addParam("city", "City code (number)", 0, types.int)
   .addParam("valuation", "Property valuation (number)", 0, types.int)
   .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
     const { ethers, fhevm, deployments } = hre;
     await fhevm.initializeCLIApi()
-    const [signer] = await ethers.getSigners();
-
+    const signers = await ethers.getSigners();
+    const signer = signers[taskArgs.callerindex]
+    const useraddress = signers[taskArgs.userindex]
     const RWAHouseDeployment = await deployments.get("RWAHouse");
     const rwaHouse: RWAHouse = await ethers.getContractAt("RWAHouse", RWAHouseDeployment.address);
 
     console.log(`Using RWAHouse contract at: ${RWAHouseDeployment.address}`);
     console.log(`Project owner: ${signer.address}`);
-    console.log(`Target user: ${taskArgs.useraddress}`);
+    console.log(`Target user: ${useraddress}`);
     console.log("Creating encrypted inputs for all property data...");
 
     // Create encrypted inputs for all three parameters (country, city, valuation)
@@ -31,7 +33,7 @@ task("rwa:store-property", "Store property information for a user (only project 
     console.log("Storing property information...");
 
     const tx = await rwaHouse.storePropertyInfo(
-      taskArgs.useraddress,         // user address
+      useraddress,         // user address
       encryptedInput.handles[0], // encrypted country
       encryptedInput.handles[1], // encrypted city
       encryptedInput.handles[2], // encrypted valuation
@@ -40,7 +42,7 @@ task("rwa:store-property", "Store property information for a user (only project 
 
     const receipt = await tx.wait();
     console.log(`Property stored! Transaction hash: ${receipt?.hash}`);
-    console.log(`Property owner: ${taskArgs.useraddress}`);
+    console.log(`Property owner: ${useraddress}`);
     console.log(`Stored by project owner: ${signer.address}`);
     console.log(`Country: ${taskArgs.country} (encrypted)`);
     console.log(`City: ${taskArgs.city} (encrypted)`);
@@ -461,28 +463,30 @@ task("rwa:has-property", "Check if an address has property")
 // ============= QUERY AUTHORIZATION TASKS =============
 
 task("rwa:authorize-query", "Authorize a query for external use")
-  .addParam("requester", "Address to authorize for queries")
+  .addParam('userindex', "signer index")
+  .addParam("requesterindex", "Address to authorize for queries")
   .addParam("querytype", "Query type: 0=COUNTRY, 1=CITY, 2=VALUATION", 0, types.int)
   .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
     const { ethers, deployments } = hre;
-    const [signer] = await ethers.getSigners();
-
+    const signers = await ethers.getSigners();
+    const signer = signers[taskArgs.userindex]
+    const requester = signers[taskArgs.requesterindex]
     const RWAHouseDeployment = await deployments.get("RWAHouse");
     const rwaHouse: RWAHouse = await ethers.getContractAt("RWAHouse", RWAHouseDeployment.address);
 
     console.log(`Using RWAHouse contract at: ${RWAHouseDeployment.address}`);
-    console.log(`Authorizing query for ${taskArgs.requester}...`);
+    console.log(`Authorizing query for ${requester.address}...`);
 
     const queryTypes = ["COUNTRY", "CITY", "VALUATION"];
     console.log(`Query type: ${queryTypes[taskArgs.querytype]} (${taskArgs.querytype})`);
 
     try {
-      const tx = await rwaHouse.authorizeQuery(taskArgs.requester, taskArgs.querytype);
+      const tx = await rwaHouse.connect(signer).authorizeQuery(requester.address, taskArgs.querytype);
       const receipt = await tx.wait();
 
       console.log(`Query authorization granted! Transaction hash: ${receipt?.hash}`);
       console.log(`Owner: ${signer.address}`);
-      console.log(`Authorized requester: ${taskArgs.requester}`);
+      console.log(`Authorized requester: ${requester.address}`);
       console.log(`Query type: ${queryTypes[taskArgs.querytype]}`);
       console.log("Note: This authorization can only be used once.");
     } catch (error: any) {
@@ -491,32 +495,29 @@ task("rwa:authorize-query", "Authorize a query for external use")
   });
 
 task("rwa:check-query-used", "Check if a query authorization has been used")
-  .addParam("owner", "Property owner address")
-  .addParam("requester", "Requester address")
+  .addParam("userindex", "Property owner address")
+  .addParam("requesterindex", "Requester address")
   .addParam("querytype", "Query type: 0=COUNTRY, 1=CITY, 2=VALUATION", 0, types.int)
   .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
     const { ethers, deployments } = hre;
+    const signers = await ethers.getSigners();
+    const signer = signers[taskArgs.userindex]
+    const requester = signers[taskArgs.requesterindex]
 
     const RWAHouseDeployment = await deployments.get("RWAHouse");
     const rwaHouse: RWAHouse = await ethers.getContractAt("RWAHouse", RWAHouseDeployment.address);
 
     console.log(`Using RWAHouse contract at: ${RWAHouseDeployment.address}`);
-    
+
     const queryTypes = ["COUNTRY", "CITY", "VALUATION"];
     console.log(`Checking if query authorization has been used:`);
-    console.log(`Owner: ${taskArgs.owner}`);
-    console.log(`Requester: ${taskArgs.requester}`);
+    console.log(`Owner: ${signer.address}`);
+    console.log(`Requester: ${requester.address}`);
     console.log(`Query type: ${queryTypes[taskArgs.querytype]}`);
 
     try {
-      const isUsed = await rwaHouse.isQueryUsed(taskArgs.owner, taskArgs.requester, taskArgs.querytype);
-      console.log(`Authorization used: ${isUsed}`);
-      
-      if (isUsed) {
-        console.log("The authorization has been consumed and cannot be used again.");
-      } else {
-        console.log("The authorization is available for use (if granted).");
-      }
+      const isUsed = await rwaHouse.isQueryAuthorized(signer.address, requester.address, taskArgs.querytype);
+      console.log(`Authorization used: ${isUsed}`)
     } catch (error: any) {
       console.log(`Error: ${error.message}`);
     }
@@ -525,30 +526,33 @@ task("rwa:check-query-used", "Check if a query authorization has been used")
 // ============= EXTERNAL QUERY INTERFACE TASKS =============
 
 task("rwa:query-country", "Query if property is in a specific country")
-  .addParam("owner", "Property owner address")
+  .addParam("requesterindex", "Property owner address")
+  .addParam("ownerindex", "Property owner address")
   .addParam("countrycode", "Country code to check against", 0, types.int)
   .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
     const { ethers, deployments } = hre;
-    const [signer] = await ethers.getSigners();
+    const signers = await ethers.getSigners();
+    const signer = signers[taskArgs.requesterindex]
+    const owner = signers[taskArgs.ownerindex]
 
     const RWAHouseDeployment = await deployments.get("RWAHouse");
     const rwaHouse: RWAHouse = await ethers.getContractAt("RWAHouse", RWAHouseDeployment.address);
 
     console.log(`Using RWAHouse contract at: ${RWAHouseDeployment.address}`);
     console.log(`Querying if property is in country: ${taskArgs.countrycode}`);
-    console.log(`Property owner: ${taskArgs.owner}`);
+    console.log(`Property owner: ${owner.address}`);
     console.log(`Requester: ${signer.address}`);
 
     try {
-      const tx = await rwaHouse.queryIsInCountry(taskArgs.owner, taskArgs.countrycode);
+      const tx = await rwaHouse.connect(signer).queryIsInCountry(owner.address, taskArgs.countrycode);
       const receipt = await tx.wait();
-      
+
       console.log(`Query submitted! Transaction hash: ${receipt?.hash}`);
-      
+
       // Extract request ID from logs
       const logs = receipt?.logs || [];
       let requestId = null;
-      
+
       for (const log of logs) {
         try {
           const parsedLog = rwaHouse.interface.parseLog(log);
@@ -560,14 +564,14 @@ task("rwa:query-country", "Query if property is in a specific country")
           // Skip logs that can't be parsed
         }
       }
-      
+
       if (requestId) {
         console.log(`Request ID: ${requestId}`);
         console.log("Note: The result will be available after decryption. Use 'rwa:get-query-result' to check the result.");
       } else {
         console.log("Note: Check the transaction events for the request ID.");
       }
-      
+
       console.log("Note: This query authorization has been consumed and cannot be used again.");
     } catch (error: any) {
       console.log(`Error: ${error.message}`);
@@ -595,13 +599,13 @@ task("rwa:query-city", "Query if property is in a specific city")
     try {
       const tx = await rwaHouse.queryIsInCity(taskArgs.owner, taskArgs.citycode);
       const receipt = await tx.wait();
-      
+
       console.log(`Query submitted! Transaction hash: ${receipt?.hash}`);
-      
+
       // Extract request ID from logs
       const logs = receipt?.logs || [];
       let requestId = null;
-      
+
       for (const log of logs) {
         try {
           const parsedLog = rwaHouse.interface.parseLog(log);
@@ -613,14 +617,14 @@ task("rwa:query-city", "Query if property is in a specific city")
           // Skip logs that can't be parsed
         }
       }
-      
+
       if (requestId) {
         console.log(`Request ID: ${requestId}`);
         console.log("Note: The result will be available after decryption. Use 'rwa:get-query-result' to check the result.");
       } else {
         console.log("Note: Check the transaction events for the request ID.");
       }
-      
+
       console.log("Note: This query authorization has been consumed and cannot be used again.");
     } catch (error: any) {
       console.log(`Error: ${error.message}`);
@@ -648,13 +652,13 @@ task("rwa:query-value", "Query if property valuation is above a threshold")
     try {
       const tx = await rwaHouse.queryIsAboveValue(taskArgs.owner, taskArgs.minvalue);
       const receipt = await tx.wait();
-      
+
       console.log(`Query submitted! Transaction hash: ${receipt?.hash}`);
-      
+
       // Extract request ID from logs
       const logs = receipt?.logs || [];
       let requestId = null;
-      
+
       for (const log of logs) {
         try {
           const parsedLog = rwaHouse.interface.parseLog(log);
@@ -666,14 +670,14 @@ task("rwa:query-value", "Query if property valuation is above a threshold")
           // Skip logs that can't be parsed
         }
       }
-      
+
       if (requestId) {
         console.log(`Request ID: ${requestId}`);
         console.log("Note: The result will be available after decryption. Use 'rwa:get-query-result' to check the result.");
       } else {
         console.log("Note: Check the transaction events for the request ID.");
       }
-      
+
       console.log("Note: This query authorization has been consumed and cannot be used again.");
     } catch (error: any) {
       console.log(`Error: ${error.message}`);
@@ -698,9 +702,9 @@ task("rwa:get-query-result", "Get the details of a query request")
 
     try {
       const [requester, propertyOwner, queryType, compareValue, isPending] = await rwaHouse.getQueryRequest(taskArgs.requestid);
-      
+
       const queryTypes = ["COUNTRY", "CITY", "VALUATION"];
-      
+
       console.log("Query Request Details:");
       console.log(`  Request ID: ${taskArgs.requestid}`);
       console.log(`  Requester: ${requester}`);
@@ -708,7 +712,7 @@ task("rwa:get-query-result", "Get the details of a query request")
       console.log(`  Query Type: ${queryTypes[Number(queryType)]} (${queryType})`);
       console.log(`  Compare Value: ${compareValue}`);
       console.log(`  Status: ${isPending ? 'PENDING' : 'COMPLETED'}`);
-      
+
       if (isPending) {
         console.log("Note: The decryption is still pending. Please wait for the result.");
       } else {
@@ -732,9 +736,9 @@ task("rwa:get-latest-request", "Get the latest request ID for an address")
 
     try {
       const latestRequestId = await rwaHouse.getLatestRequestId(taskArgs.requester);
-      
+
       console.log(`Latest Request ID: ${latestRequestId.toString()}`);
-      
+
       if (latestRequestId.toString() === "0") {
         console.log("Note: No queries have been made by this address yet.");
       } else {
