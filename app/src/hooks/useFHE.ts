@@ -8,17 +8,20 @@ export const useFHE = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+
+  const initFHE = (provider: any, chainId: any) => {
     const initializeFHE = async () => {
       try {
         setIsLoading(true);
         setError(null);
+        console.log("init FHE", provider, chainId);
 
         // Initialize SDK first
         await initSDK();
         const fheInstance = await createInstance({
           ...SepoliaConfig,
-          network: window.ethereum
+          network: provider,
+          chainId: chainId
         });
         setInstance(fheInstance);
       } catch (err) {
@@ -32,7 +35,7 @@ export const useFHE = () => {
     };
 
     initializeFHE();
-  }, []);
+  }
 
   const createEncryptedInput = (contractAddress: string, userAddress: string) => {
     if (!instance) {
@@ -94,5 +97,6 @@ export const useFHE = () => {
     userDecrypt,
     generateKeypair,
     createEIP712,
+    initFHE
   };
 };

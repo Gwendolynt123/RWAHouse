@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAccount } from 'wagmi';
+import { useAccount, usePublicClient, useChainId } from 'wagmi';
 import { useFHE } from '../hooks/useFHE';
 import { useRWAHouse } from '../hooks/useRWAHouse';
 
@@ -12,7 +12,9 @@ interface PropertyData {
 
 export const PropertyRegistration: React.FC = () => {
   const { address } = useAccount();
-  const { createEncryptedInput, isLoading: fheLoading, error: fheError } = useFHE();
+  const publicClient = usePublicClient();
+  const chainId = useChainId();
+  const { createEncryptedInput, isLoading: fheLoading, error: fheError,initFHE } = useFHE();
   const { storeProperty, writeStoreProperty, contractAddress } = useRWAHouse();
 
   const [formData, setFormData] = useState<PropertyData>({
@@ -126,12 +128,21 @@ export const PropertyRegistration: React.FC = () => {
 
       // Call the contract with user address
       console.log(`🔄 Calling contract function for user: ${formData.userAddress}`);
+      let formattedProof: string;
+      let proof:any= encryptedInput.inputProof
+      if (typeof proof === 'string') {
+        formattedProof = proof.startsWith('0x') ? proof : `0x${proof}`;
+      } else if (proof instanceof Uint8Array) {
+        formattedProof = `0x${Array.from(proof).map(b => b.toString(16).padStart(2, '0')).join('')}`;
+      } else {
+        formattedProof = `0x${proof.toString()}`;
+      }
       
       writeStoreProperty(formData.userAddress, [
         handle1, // country
         handle2, // city
         handle3, // valuation
-        encryptedInput.inputProof,
+        formattedProof,
       ]);
       
       console.log('✅ Contract call initiated');
@@ -150,7 +161,8 @@ export const PropertyRegistration: React.FC = () => {
     return (
       <div className="property-registration">
         <h2>Property Registration</h2>
-        <p>Loading FHE system...</p>
+        <button onClick={()=>initFHE(publicClient, chainId)}>Init FHE</button>
+
       </div>
     );
   }
@@ -159,7 +171,6 @@ export const PropertyRegistration: React.FC = () => {
     <div className="property-registration">
       <h2>Register Your Property</h2>
       <p>Store your property information securely on the blockchain using encrypted data.</p>
-      
       <form onSubmit={handleSubmit} className="property-form">
         <div className="form-group">
           <label htmlFor="userAddress">User Address:</label>
