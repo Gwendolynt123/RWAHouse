@@ -269,7 +269,13 @@ contract RWAHouse is SepoliaConfig {
 
         // Mark this query type as available for the requester
         queryAuthorized[msg.sender][requester][uint8(queryType)] = true;
-
+        if (queryType == QueryType.COUNTRY) {
+            FHE.allow(properties[msg.sender].country, requester);
+        } else if (queryType == QueryType.CITY) {
+            FHE.allow(properties[msg.sender].city, requester);
+        } else if (queryType == QueryType.VALUATION) {
+            FHE.allow(properties[msg.sender].valuation, requester);
+        }
         emit QueryAuthorizationGranted(msg.sender, requester, queryType);
     }
 
