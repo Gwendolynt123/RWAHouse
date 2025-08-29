@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAccount, usePublicClient, useChainId } from 'wagmi';
 import { useFHE } from '../contexts/FHEContext';
 import { useRWAHouse } from '../hooks/useRWAHouse';
+import { COUNTRIES, CITIES, getCitiesByCountry } from '../data/locationCodes';
 
 interface PropertyData {
   userAddress: string;
@@ -26,6 +27,7 @@ export const PropertyRegistration: React.FC = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
+  const [availableCities, setAvailableCities] = useState(CITIES.filter(city => city.countryCode === 1)); // 默认显示美国城市
 
   // Monitor wallet connection and contract status
   useEffect(() => {
@@ -57,6 +59,16 @@ export const PropertyRegistration: React.FC = () => {
       setFormData(prev => ({
         ...prev,
         [field]: value,
+      }));
+    } else if (field === 'country') {
+      const countryCode = parseInt(value) || 0;
+      const citiesForCountry = getCitiesByCountry(countryCode);
+      setAvailableCities(citiesForCountry);
+      
+      setFormData(prev => ({
+        ...prev,
+        country: countryCode,
+        city: 0, // 重置城市选择
       }));
     } else {
       const numValue = parseInt(value) || 0;
@@ -100,8 +112,14 @@ export const PropertyRegistration: React.FC = () => {
       console.log('🔄 Creating encrypted input...');
       const input = createEncryptedInput(contractAddress, address);
 
-      // Add encrypted values
-      console.log(`🔄 Adding encrypted values - country:${formData.country}, city:${formData.city}, valuation:${formData.valuation}`);
+      // Add encrypted values - show both names and codes for verification
+      const selectedCountry = COUNTRIES.find(c => c.code === formData.country);
+      const selectedCity = availableCities.find(c => c.code === formData.city);
+      console.log(`🔄 Adding encrypted values:`);
+      console.log(`   Country: ${selectedCountry?.name} (${selectedCountry?.nameEn}) - Code: ${formData.country}`);
+      console.log(`   City: ${selectedCity?.name} (${selectedCity?.nameEn}) - Code: ${formData.city}`);
+      console.log(`   Valuation: $${formData.valuation.toLocaleString()}`);
+      
       input.add32(formData.country);
       input.add32(formData.city);
       input.add32(formData.valuation);
@@ -169,7 +187,7 @@ export const PropertyRegistration: React.FC = () => {
       {fheInstance == null ?
         <div className="property-registration">
           <h2>Property Registration</h2>
-          <button 
+          <button
             onClick={() => initFHE(publicClient, chainId)}
             disabled={isInitializing}
           >
@@ -178,11 +196,11 @@ export const PropertyRegistration: React.FC = () => {
 
         </div> :
         <div className="property-registration">
-          <h2>Register Your Property</h2>
-          <p>Store your property information securely on the blockchain using encrypted data.</p>
+          <h2>Property Registration</h2>
+          <p>Store property information securely on the blockchain using encrypted data</p>
           <form onSubmit={handleSubmit} className="property-form">
             <div className="form-group">
-              <label htmlFor="userAddress">User Address:</label>
+              <label htmlFor="userAddress">Property Owner Address:</label>
               <input
                 type="text"
                 id="userAddress"
@@ -192,35 +210,61 @@ export const PropertyRegistration: React.FC = () => {
                 pattern="^0x[a-fA-F0-9]{40}$"
                 required
               />
-              <small>Enter the Ethereum address for whom to store property information</small>
+              <small>Enter the property owner's Ethereum address</small>
             </div>
 
             <div className="form-group">
-              <label htmlFor="country">Country Code:</label>
-              <input
-                type="number"
+              <label htmlFor="country">Country:</label>
+              <select
                 id="country"
                 value={formData.country}
                 onChange={(e) => handleInputChange('country', e.target.value)}
-                placeholder="e.g., 1 for USA, 86 for China"
-                min="1"
                 required
-              />
-              <small>Use numeric country codes (e.g., 1 for USA, 86 for China)</small>
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  fontSize: '14px'
+                }}
+              >
+                <option value={0}>Select Country</option>
+                {COUNTRIES.map((country) => (
+                  <option key={country.code} value={country.code}>
+                    {country.name} ({country.nameEn})
+                  </option>
+                ))}
+              </select>
+              <small>Select property location country</small>
             </div>
 
             <div className="form-group">
-              <label htmlFor="city">City Code:</label>
-              <input
-                type="number"
+              <label htmlFor="city">City:</label>
+              <select
                 id="city"
                 value={formData.city}
                 onChange={(e) => handleInputChange('city', e.target.value)}
-                placeholder="e.g., 1 for New York, 2 for Los Angeles"
-                min="1"
                 required
-              />
-              <small>Use numeric city codes within your country</small>
+                disabled={formData.country === 0 || availableCities.length === 0}
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  fontSize: '14px',
+                  backgroundColor: formData.country === 0 ? '#f5f5f5' : 'white'
+                }}
+              >
+                <option value={0}>
+                  {formData.country === 0 ? 'Please select country first' : 'Select City'}
+                </option>
+                {availableCities.map((city) => (
+                  <option key={city.code} value={city.code}>
+                    {city.name} ({city.nameEn})
+                  </option>
+                ))}
+              </select>
+              <small>Select property location city</small>
             </div>
 
             <div className="form-group">

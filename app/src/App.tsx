@@ -81,7 +81,7 @@ function App() {
   // 权限检查函数
   const hasAccess = (tab: string): boolean => {
     if (!userRole) return false;
-    
+
     switch (tab) {
       case 'register':
         return userRole === 'appraiser';
@@ -102,7 +102,7 @@ function App() {
           <h1>RWAHouse - Confidential Property Management</h1>
           <p>请选择您的角色以继续使用系统</p>
         </header>
-        
+
         <div style={{
           display: 'flex',
           flexDirection: 'column',
@@ -148,7 +148,7 @@ function App() {
             ))}
           </div>
         </div>
-        
+
         <footer className="app-footer">
           <p>Built with Zama FHE, React, Vite, and Rainbow Kit</p>
           <p>Your property data is encrypted and only accessible by authorized parties</p>
@@ -218,18 +218,18 @@ function App() {
 
         <main className="app-main">
           {activeTab === 'register' && (
-            hasAccess('register') ? 
-              <PropertyRegistration /> : 
+            hasAccess('register') ?
+              <PropertyRegistration /> :
               <AccessDenied role={roleNames[userRole!]} requiredRole={roleNames.appraiser} />
           )}
           {activeTab === 'info' && (
-            hasAccess('info') ? 
-              <PropertyInfo /> : 
+            hasAccess('info') ?
+              <PropertyInfo /> :
               <AccessDenied role={roleNames[userRole!]} requiredRole={roleNames.user} />
           )}
           {activeTab === 'queries' && (
-            hasAccess('queries') ? 
-              <PropertyQueries /> : 
+            hasAccess('queries') ?
+              <PropertyQueries /> :
               <AccessDenied role={roleNames[userRole!]} requiredRole={roleNames.lending_platform} />
           )}
           {activeTab === 'auth' && <AuthorizationManager />}
