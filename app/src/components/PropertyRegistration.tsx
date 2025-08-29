@@ -27,7 +27,7 @@ export const PropertyRegistration: React.FC = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
-  const [availableCities, setAvailableCities] = useState(CITIES.filter(city => city.countryCode === 1)); // 默认显示美国城市
+  const [availableCities, setAvailableCities] = useState(CITIES.filter(city => city.countryCode === 1)); // Default to US cities
 
   // Monitor wallet connection and contract status
   useEffect(() => {
@@ -68,7 +68,7 @@ export const PropertyRegistration: React.FC = () => {
       setFormData(prev => ({
         ...prev,
         country: countryCode,
-        city: 0, // 重置城市选择
+        city: 0, // Reset city selection
       }));
     } else {
       const numValue = parseInt(value) || 0;
@@ -116,8 +116,8 @@ export const PropertyRegistration: React.FC = () => {
       const selectedCountry = COUNTRIES.find(c => c.code === formData.country);
       const selectedCity = availableCities.find(c => c.code === formData.city);
       console.log(`🔄 Adding encrypted values:`);
-      console.log(`   Country: ${selectedCountry?.name} (${selectedCountry?.nameEn}) - Code: ${formData.country}`);
-      console.log(`   City: ${selectedCity?.name} (${selectedCity?.nameEn}) - Code: ${formData.city}`);
+      console.log(`   Country: ${selectedCountry?.name} - Code: ${formData.country}`);
+      console.log(`   City: ${selectedCity?.name} - Code: ${formData.city}`);
       console.log(`   Valuation: $${formData.valuation.toLocaleString()}`);
       
       input.add32(formData.country);
@@ -231,7 +231,7 @@ export const PropertyRegistration: React.FC = () => {
                 <option value={0}>Select Country</option>
                 {COUNTRIES.map((country) => (
                   <option key={country.code} value={country.code}>
-                    {country.name} ({country.nameEn})
+                    {country.name}
                   </option>
                 ))}
               </select>
@@ -260,7 +260,7 @@ export const PropertyRegistration: React.FC = () => {
                 </option>
                 {availableCities.map((city) => (
                   <option key={city.code} value={city.code}>
-                    {city.name} ({city.nameEn})
+                    {city.name}
                   </option>
                 ))}
               </select>

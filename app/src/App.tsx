@@ -12,12 +12,12 @@ import { useAccount, useChainId } from 'wagmi';
 type UserRole = 'appraiser' | 'user' | 'lending_platform';
 
 const roleNames = {
-  appraiser: 'RWA房产鉴定商',
-  user: '用户',
-  lending_platform: '第三方借贷平台'
+  appraiser: 'Property Appraiser',
+  user: 'Property Owner',
+  lending_platform: 'Lending Platform'
 };
 
-// FHE 初始化组件
+// FHE Initialization Component
 const FHEInitButton: React.FC = () => {
   const { instance, isInitializing, initFHE } = useFHE();
   const { connector } = useAccount();
@@ -25,7 +25,7 @@ const FHEInitButton: React.FC = () => {
 
   const handleInitFHE = async () => {
     if (!connector) {
-      alert('请先连接钱包');
+      alert('Please connect your wallet first');
       return;
     }
 
@@ -33,8 +33,8 @@ const FHEInitButton: React.FC = () => {
       const provider = await connector.getProvider();
       await initFHE(provider, chainId);
     } catch (err) {
-      console.error('FHE 初始化失败:', err);
-      alert('FHE 初始化失败，请检查控制台');
+      console.error('FHE initialization failed:', err);
+      alert('FHE initialization failed, please check console');
     }
   };
 
@@ -48,7 +48,7 @@ const FHEInitButton: React.FC = () => {
         fontSize: '14px',
         fontWeight: 'bold'
       }}>
-        ✓ FHE 已就绪
+        ✓ FHE Ready
       </div>
     );
   }
@@ -69,7 +69,7 @@ const FHEInitButton: React.FC = () => {
         opacity: isInitializing ? 0.6 : 1
       }}
     >
-      {isInitializing ? '初始化中...' : '初始化 FHE'}
+      {isInitializing ? 'Initializing...' : 'Initialize FHE'}
     </button>
   );
 };
@@ -78,7 +78,7 @@ function App() {
   const [activeTab, setActiveTab] = useState<'register' | 'info' | 'queries' | 'auth'>('register');
   const [userRole, setUserRole] = useState<UserRole | null>(null);
 
-  // 权限检查函数
+  // Permission check function
   const hasAccess = (tab: string): boolean => {
     if (!userRole) return false;
 
@@ -94,13 +94,13 @@ function App() {
     }
   };
 
-  // 如果未选择角色，显示角色选择界面
+  // If no role selected, show role selection interface
   if (!userRole) {
     return (
       <div className="app">
         <header className="app-header">
           <h1>RWAHouse - Confidential Property Management</h1>
-          <p>请选择您的角色以继续使用系统</p>
+          <p>Please select your role to continue using the system</p>
         </header>
 
         <div style={{
@@ -111,7 +111,7 @@ function App() {
           minHeight: '400px',
           padding: '40px'
         }}>
-          <h2 style={{ marginBottom: '30px', color: '#333' }}>选择您的角色</h2>
+          <h2 style={{ marginBottom: '30px', color: '#333' }}>Select Your Role</h2>
           <div style={{
             display: 'flex',
             gap: '20px',
@@ -172,7 +172,7 @@ function App() {
               fontSize: '14px',
               fontWeight: 'bold'
             }}>
-              当前角色: {roleNames[userRole!]}
+              Current Role: {roleNames[userRole!]}
             </div>
             <button
               onClick={() => setUserRole(null)}
@@ -186,7 +186,7 @@ function App() {
                 cursor: 'pointer'
               }}
             >
-              切换角色
+              Switch Role
             </button>
             <FHEInitButton />
             <div className="connect-wallet">

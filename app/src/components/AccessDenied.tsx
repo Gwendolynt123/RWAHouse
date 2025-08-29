@@ -31,7 +31,7 @@ export const AccessDenied: React.FC<AccessDeniedProps> = ({ role, requiredRole }
         marginBottom: '15px',
         textAlign: 'center'
       }}>
-        您无权访问此页面
+        Access Denied
       </h2>
       <p style={{
         color: '#6c757d',
@@ -39,14 +39,14 @@ export const AccessDenied: React.FC<AccessDeniedProps> = ({ role, requiredRole }
         fontSize: '16px',
         marginBottom: '10px'
       }}>
-        当前角色：{role}
+        Current Role: {role}
       </p>
       <p style={{
         color: '#6c757d',
         textAlign: 'center',
         fontSize: '16px'
       }}>
-        需要角色：{requiredRole}
+        Required Role: {requiredRole}
       </p>
       <div style={{
         marginTop: '20px',
@@ -56,7 +56,7 @@ export const AccessDenied: React.FC<AccessDeniedProps> = ({ role, requiredRole }
         borderRadius: '4px',
         color: '#856404'
       }}>
-        请选择正确的角色后重新访问
+        Please select the correct role to access this page
       </div>
     </div>
   );
