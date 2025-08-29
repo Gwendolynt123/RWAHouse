@@ -16,7 +16,7 @@ export const useRWAHouse = () => {
       address: getContractAddress() as `0x${string}`,
       abi: RWA_HOUSE_ABI,
       functionName: 'hasProperty',
-      args: address ? [address] : undefined,
+      args: address ? [address as `0x${string}`] : undefined,
       query: {
         enabled: !!address,
       },
@@ -29,7 +29,7 @@ export const useRWAHouse = () => {
       address: getContractAddress() as `0x${string}`,
       abi: RWA_HOUSE_ABI,
       functionName: 'isAuthorized',
-      args: owner && accessor ? [owner, accessor] : undefined,
+      args: owner && accessor ? [owner as `0x${string}`, accessor as `0x${string}`] : undefined,
       query: {
         enabled: !!(owner && accessor),
       },
@@ -66,7 +66,7 @@ export const useRWAHouse = () => {
       address: getContractAddress() as `0x${string}`,
       abi: RWA_HOUSE_ABI,
       functionName: 'getPropertyInfo',
-      args: address ? [address] : undefined,
+      args: address ? [address as `0x${string}`] : undefined,
       query: {
         enabled: !!address,
       },
@@ -74,9 +74,9 @@ export const useRWAHouse = () => {
   };
 
   // Helper functions to call write contracts with proper parameters
-  const writeStoreProperty = (userAddress: string, args: any[]) => {
+  const writeStoreProperty = (userAddress: string, args: [`0x${string}`, `0x${string}`, `0x${string}`, `0x${string}`]) => {
     const contractAddress = getContractAddress();
-    const fullArgs = [userAddress, ...args];
+    const fullArgs: [`0x${string}`, `0x${string}`, `0x${string}`, `0x${string}`, `0x${string}`] = [userAddress as `0x${string}`, ...args];
     
     console.log('🔍 useRWAHouse: writeStoreProperty called with:');
     console.log('  - Contract address:', contractAddress);
@@ -92,7 +92,7 @@ export const useRWAHouse = () => {
     });
   };
 
-  const writeAuthorizeAccess = (args: any[]) => {
+  const writeAuthorizeAccess = (args: [`0x${string}`]) => {
     authorizeAccess.writeContract({
       address: getContractAddress() as `0x${string}`,
       abi: RWA_HOUSE_ABI,
@@ -101,7 +101,7 @@ export const useRWAHouse = () => {
     });
   };
 
-  const writeRevokeAccess = (args: any[]) => {
+  const writeRevokeAccess = (args: [`0x${string}`]) => {
     revokeAccess.writeContract({
       address: getContractAddress() as `0x${string}`,
       abi: RWA_HOUSE_ABI,
@@ -110,7 +110,7 @@ export const useRWAHouse = () => {
     });
   };
 
-  const writeAuthorizeQuery = (args: any[]) => {
+  const writeAuthorizeQuery = (args: [`0x${string}`, number]) => {
     authorizeQuery.writeContract({
       address: getContractAddress() as `0x${string}`,
       abi: RWA_HOUSE_ABI,
@@ -119,7 +119,7 @@ export const useRWAHouse = () => {
     });
   };
 
-  const writeQueryCountry = (args: any[]) => {
+  const writeQueryCountry = (args: [`0x${string}`, number]) => {
     queryCountry.writeContract({
       address: getContractAddress() as `0x${string}`,
       abi: RWA_HOUSE_ABI,
@@ -128,7 +128,7 @@ export const useRWAHouse = () => {
     });
   };
 
-  const writeQueryCity = (args: any[]) => {
+  const writeQueryCity = (args: [`0x${string}`, number]) => {
     queryCity.writeContract({
       address: getContractAddress() as `0x${string}`,
       abi: RWA_HOUSE_ABI,
@@ -137,7 +137,7 @@ export const useRWAHouse = () => {
     });
   };
 
-  const writeQueryValuation = (args: any[]) => {
+  const writeQueryValuation = (args: [`0x${string}`, number]) => {
     queryValuation.writeContract({
       address: getContractAddress() as `0x${string}`,
       abi: RWA_HOUSE_ABI,
@@ -146,11 +146,11 @@ export const useRWAHouse = () => {
     });
   };
 
-  const writeUpdateValuation = (args: any[]) => {
+  const writeUpdateValuation = (args: [`0x${string}`, `0x${string}`, `0x${string}`, `0x${string}`, `0x${string}`]) => {
     updateValuation.writeContract({
       address: getContractAddress() as `0x${string}`,
       abi: RWA_HOUSE_ABI,
-      functionName: 'updatePropertyValuation',
+      functionName: 'storePropertyInfo',
       args,
     });
   };

@@ -36,7 +36,7 @@ export const PropertyQueries: React.FC = () => {
       return;
     }
 
-    writeQueryCountry([queryForm.propertyOwner, parseInt(queryForm.countryCode)]);
+    writeQueryCountry([queryForm.propertyOwner as `0x${string}`, parseInt(queryForm.countryCode)]);
 
     // Add to pending queries
     const newQuery: QueryResult = {
@@ -54,7 +54,7 @@ export const PropertyQueries: React.FC = () => {
       return;
     }
 
-    writeQueryCity([queryForm.propertyOwner, parseInt(queryForm.cityCode)]);
+    writeQueryCity([queryForm.propertyOwner as `0x${string}`, parseInt(queryForm.cityCode)]);
 
     const newQuery: QueryResult = {
       requestId: Date.now().toString(),
@@ -71,7 +71,7 @@ export const PropertyQueries: React.FC = () => {
       return;
     }
 
-    writeQueryValuation([queryForm.propertyOwner, parseInt(queryForm.minValuation)]);
+    writeQueryValuation([queryForm.propertyOwner as `0x${string}`, parseInt(queryForm.minValuation)]);
 
     const newQuery: QueryResult = {
       requestId: Date.now().toString(),
@@ -85,120 +85,320 @@ export const PropertyQueries: React.FC = () => {
 
   if (!address) {
     return (
-      <div className="property-queries">
-        <h2>Property Queries</h2>
-        <p>Please connect your wallet to perform property queries.</p>
+      <div className="luxury-card text-center" style={{ padding: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px' }}>
+          <span style={{ fontSize: '1.2rem' }}>🔍</span>
+          <h2 style={{ fontSize: '0.95rem', margin: 0 }}>Property Queries - Connect Wallet Required</h2>
+        </div>
+        <div style={{
+          padding: '8px 12px',
+          background: 'linear-gradient(135deg, rgba(224, 17, 95, 0.1) 0%, rgba(224, 17, 95, 0.05) 100%)',
+          border: '1px solid rgba(224, 17, 95, 0.2)',
+          borderRadius: '8px'
+        }}>
+          <span style={{ fontSize: '1rem', marginRight: '6px' }}>⚠️</span>
+          <span style={{ fontSize: '0.85rem' }}>Wallet connection required</span>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="property-queries">
-      <h2>Property Verification Queries</h2>
+    <div>
+      {/* Ultra Compact Header */}
+      <div className="luxury-card" style={{ marginBottom: '10px', padding: '8px 12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '1.2rem' }}>🔍</span>
+          <h2 style={{ fontSize: '0.95rem', margin: 0 }}>Property Verification Queries</h2>
+          <span style={{ fontSize: '0.75rem', color: 'var(--color-silver)', marginLeft: 'auto' }}>
+            Confidential queries with owner auth
+          </span>
+        </div>
+      </div>
 
-      {/* Query Section */}
-      <div className="query-section">
-        <h3>Perform Queries</h3>
-        <p>Query properties (requires authorization from property owner):</p>
+      {/* Property Owner Input */}
+      <div className="luxury-card" style={{ marginBottom: '10px', padding: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+          <span style={{ fontSize: '1rem' }}>👤</span>
+          <h3 style={{ margin: 0, fontSize: '0.9rem' }}>Property Owner</h3>
+          <span style={{ color: 'var(--color-silver)', fontSize: '0.75rem', marginLeft: 'auto' }}>Required</span>
+        </div>
 
-        <div className="query-form">
-          <div className="form-group">
-            <label>Property Owner Address:</label>
-            <input
-              type="text"
-              value={queryForm.propertyOwner}
-              onChange={(e) => setQueryForm(prev => ({ ...prev, propertyOwner: e.target.value }))}
-              placeholder="0x..."
-            />
+        <div className="form-group" style={{ marginBottom: 0 }}>
+          <input
+            id="propertyOwner"
+            type="text"
+            value={queryForm.propertyOwner}
+            onChange={(e) => setQueryForm(prev => ({ ...prev, propertyOwner: e.target.value }))}
+            placeholder="0x1234567890abcdef1234567890abcdef12345678"
+            className="luxury-input"
+            style={{ textAlign: 'center', fontSize: '0.85rem', padding: '8px 12px' }}
+          />
+          <span className="form-hint" style={{ fontSize: '0.7rem' }}>
+            Owner must authorize queries
+          </span>
+        </div>
+      </div>
+
+      {/* Query Options */}
+      <div className="grid grid-cols-1" style={{ gap: '10px', marginBottom: '15px' }}>
+        {/* Country Query */}
+        <div className="luxury-card" style={{ padding: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+            <span style={{ fontSize: '1rem' }}>🌍</span>
+            <h3 style={{ margin: 0, fontSize: '0.9rem' }}>Country Verification</h3>
+            <span style={{ color: 'var(--color-silver)', fontSize: '0.75rem', marginLeft: 'auto' }}>Location check</span>
           </div>
 
-          <div className="query-buttons">
-            <div className="query-option">
-              <h4>Country Query</h4>
-              <div className="form-group">
-                <label>Country Code:</label>
-                <input
-                  type="number"
-                  value={queryForm.countryCode}
-                  onChange={(e) => setQueryForm(prev => ({ ...prev, countryCode: e.target.value }))}
-                  placeholder="e.g., 1"
-                />
-              </div>
-              <button
-                onClick={handleQueryCountry}
-                disabled={queryCountry.isPending}
-                className="query-button"
-              >
-                {queryCountry.isPending ? 'Querying...' : 'Query Country'}
-              </button>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+            <div style={{ flex: 1 }}>
+              <input
+                id="countryCode"
+                type="number"
+                value={queryForm.countryCode}
+                onChange={(e) => setQueryForm(prev => ({ ...prev, countryCode: e.target.value }))}
+                placeholder="e.g., 1 for USA"
+                className="luxury-input"
+                style={{ fontSize: '0.85rem', padding: '8px 12px' }}
+              />
             </div>
+            <button
+              onClick={handleQueryCountry}
+              disabled={queryCountry.isPending || !queryForm.propertyOwner || !queryForm.countryCode}
+              className="btn-premium"
+              style={{ 
+                opacity: (queryCountry.isPending || !queryForm.propertyOwner || !queryForm.countryCode) ? 0.6 : 1,
+                fontSize: '0.8rem',
+                padding: '8px 16px',
+                minWidth: '100px'
+              }}
+            >
+              {queryCountry.isPending ? (
+                <>
+                  <div className="luxury-spinner" style={{ width: '12px', height: '12px', marginRight: '6px' }}></div>
+                  Querying...
+                </>
+              ) : (
+                'Verify'
+              )}
+            </button>
+          </div>
+        </div>
 
-            <div className="query-option">
-              <h4>City Info</h4>
-              <div className="form-group">
-                <label>City Code:</label>
-                <input
-                  type="number"
-                  value={queryForm.cityCode}
-                  onChange={(e) => setQueryForm(prev => ({ ...prev, cityCode: e.target.value }))}
-                  placeholder="e.g., 1"
-                />
-              </div>
-              <button
-                onClick={handleQueryCity}
-                disabled={queryCity.isPending}
-                className="query-button"
-              >
-                {queryCity.isPending ? 'Querying...' : 'Query City'}
-              </button>
-            </div>
+        {/* City Query */}
+        <div className="luxury-card" style={{ padding: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+            <span style={{ fontSize: '1rem' }}>🏙️</span>
+            <h3 style={{ margin: 0, fontSize: '0.9rem' }}>City Verification</h3>
+            <span style={{ color: 'var(--color-silver)', fontSize: '0.75rem', marginLeft: 'auto' }}>City check</span>
+          </div>
 
-            <div className="query-option">
-              <h4>Valuation Query</h4>
-              <div className="form-group">
-                <label>Minimum Value (USD):</label>
-                <input
-                  type="number"
-                  value={queryForm.minValuation}
-                  onChange={(e) => setQueryForm(prev => ({ ...prev, minValuation: e.target.value }))}
-                  placeholder="e.g., 500000"
-                />
-              </div>
-              <button
-                onClick={handleQueryValuation}
-                disabled={queryValuation.isPending}
-                className="query-button"
-              >
-                {queryValuation.isPending ? 'Querying...' : 'Query Valuation'}
-              </button>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+            <div style={{ flex: 1 }}>
+              <input
+                id="cityCode"
+                type="number"
+                value={queryForm.cityCode}
+                onChange={(e) => setQueryForm(prev => ({ ...prev, cityCode: e.target.value }))}
+                placeholder="e.g., 1 for New York"
+                className="luxury-input"
+                style={{ fontSize: '0.85rem', padding: '8px 12px' }}
+              />
             </div>
+            <button
+              onClick={handleQueryCity}
+              disabled={queryCity.isPending || !queryForm.propertyOwner || !queryForm.cityCode}
+              className="btn-premium"
+              style={{ 
+                opacity: (queryCity.isPending || !queryForm.propertyOwner || !queryForm.cityCode) ? 0.6 : 1,
+                fontSize: '0.8rem',
+                padding: '8px 16px',
+                minWidth: '100px'
+              }}
+            >
+              {queryCity.isPending ? (
+                <>
+                  <div className="luxury-spinner" style={{ width: '12px', height: '12px', marginRight: '6px' }}></div>
+                  Querying...
+                </>
+              ) : (
+                'Verify'
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Valuation Query */}
+        <div className="luxury-card" style={{ padding: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+            <span style={{ fontSize: '1rem' }}>💰</span>
+            <h3 style={{ margin: 0, fontSize: '0.9rem' }}>Valuation Verification</h3>
+            <span style={{ color: 'var(--color-silver)', fontSize: '0.75rem', marginLeft: 'auto' }}>Value check</span>
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+            <div style={{ flex: 1 }}>
+              <input
+                id="minValuation"
+                type="number"
+                value={queryForm.minValuation}
+                onChange={(e) => setQueryForm(prev => ({ ...prev, minValuation: e.target.value }))}
+                placeholder="e.g., 500,000"
+                className="luxury-input"
+                style={{ fontSize: '0.85rem', padding: '8px 12px' }}
+              />
+            </div>
+            <button
+              onClick={handleQueryValuation}
+              disabled={queryValuation.isPending || !queryForm.propertyOwner || !queryForm.minValuation}
+              className="btn-premium"
+              style={{ 
+                opacity: (queryValuation.isPending || !queryForm.propertyOwner || !queryForm.minValuation) ? 0.6 : 1,
+                fontSize: '0.8rem',
+                padding: '8px 16px',
+                minWidth: '100px'
+              }}
+            >
+              {queryValuation.isPending ? (
+                <>
+                  <div className="luxury-spinner" style={{ width: '12px', height: '12px', marginRight: '6px' }}></div>
+                  Querying...
+                </>
+              ) : (
+                'Verify'
+              )}
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Query Results */}
+      {/* Query Results Section */}
       {queries.length > 0 && (
-        <div className="query-results">
-          <h3>Query Results</h3>
-          {queries.map((query, index) => (
-            <div key={index} className="query-result">
-              <div className="result-header">
-                <strong>{query.type.toUpperCase()} Query</strong>
-                <span className={`status ${query.isPending ? 'pending' : 'completed'}`}>
-                  {query.isPending ? 'Pending' : 'Completed'}
-                </span>
-              </div>
-              <div className="result-details">
-                <p>Query Value: {query.value}</p>
-                <p>Request ID: {query.requestId}</p>
-                {query.result !== undefined && (
-                  <p className="result">
-                    Result: <strong>{query.result ? 'Yes' : 'No'}</strong>
-                  </p>
-                )}
-              </div>
+        <div className="luxury-card" style={{ padding: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+            <span style={{ fontSize: '1rem' }}>📊</span>
+            <h3 style={{ fontSize: '0.9rem', margin: 0 }}>Query Results</h3>
+            <span style={{ color: 'var(--color-silver)', fontSize: '0.75rem', marginLeft: 'auto' }}>
+              {queries.length} total queries
+            </span>
+          </div>
+
+          <div style={{ display: 'grid', gap: '8px' }}>
+            {queries.map((query, index) => {
+              const queryConfig = {
+                country: { icon: '🌍', label: 'Country', color: 'var(--color-sapphire)' },
+                city: { icon: '🏙️', label: 'City', color: 'var(--color-emerald)' },
+                valuation: { icon: '💰', label: 'Valuation', color: 'var(--color-gold)' }
+              };
+
+              const config = queryConfig[query.type];
+
+              return (
+                <div
+                  key={index}
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
+                    border: '1px solid rgba(255, 215, 0, 0.1)',
+                    borderRadius: '8px',
+                    padding: '10px',
+                    position: 'relative'
+                  }}
+                >
+                  {/* Status Indicator */}
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: '2px',
+                    background: query.isPending ? 
+                      'linear-gradient(90deg, #FFD700, #0F52BA, #FFD700)' :
+                      query.result ? 
+                        'linear-gradient(90deg, #50C878, #32CD32)' :
+                        'linear-gradient(90deg, #E0115F, #DC143C)',
+                    backgroundSize: query.isPending ? '200% 100%' : '100% 100%',
+                    animation: query.isPending ? 'slideGradient 2s linear infinite' : 'none'
+                  }} />
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '0.9rem' }}>{config.icon}</span>
+                      <h4 style={{ margin: 0, fontSize: '0.85rem' }}>{config.label}</h4>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--color-silver)' }}>
+                        {query.isPending ? 'Pending...' : query.result !== undefined ? 'Complete' : 'Processing'}
+                      </span>
+                      <span style={{ fontSize: '0.8rem' }}>
+                        {query.isPending ? '⏳' : query.result ? '✅' : '❌'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem' }}>
+                    <span style={{ color: 'var(--color-silver)' }}>
+                      Value: <span style={{ color: 'var(--color-ivory)' }}>
+                        {query.type === 'valuation' ? `$${query.value.toLocaleString()}+` : query.value}
+                      </span>
+                    </span>
+
+                    {query.result !== undefined && (
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        padding: '3px 8px',
+                        borderRadius: '12px',
+                        background: query.result ?
+                          'rgba(80, 200, 120, 0.15)' :
+                          'rgba(224, 17, 95, 0.15)',
+                        border: query.result ?
+                          '1px solid rgba(80, 200, 120, 0.25)' :
+                          '1px solid rgba(224, 17, 95, 0.25)'
+                      }}>
+                        <span style={{ fontSize: '0.7rem' }}>
+                          {query.result ? '✅' : '❌'}
+                        </span>
+                        <span style={{
+                          color: query.result ? 'var(--color-emerald)' : 'var(--color-ruby)',
+                          fontSize: '0.75rem',
+                          fontWeight: '600'
+                        }}>
+                          {query.result ? 'MATCH' : 'NO MATCH'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Results Summary */}
+          <div style={{
+            marginTop: '10px',
+            padding: '8px 12px',
+            background: 'rgba(255, 215, 0, 0.05)',
+            border: '1px solid rgba(255, 215, 0, 0.1)',
+            borderRadius: '6px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '0.8rem' }}>📋</span>
+              <span style={{ fontSize: '0.8rem' }}>Summary:</span>
             </div>
-          ))}
+            <span style={{ 
+              color: 'var(--color-silver)', 
+              fontSize: '0.75rem'
+            }}>
+              Total: {queries.length} | 
+              Pending: {queries.filter(q => q.isPending).length} | 
+              Done: {queries.filter(q => !q.isPending).length}
+            </span>
+          </div>
         </div>
       )}
     </div>

@@ -163,10 +163,10 @@ export const PropertyRegistration: React.FC = () => {
       }
 
       writeStoreProperty(formData.userAddress, [
-        handle1, // country
-        handle2, // city
-        handle3, // valuation
-        formattedProof,
+        handle1 as `0x${string}`, // country
+        handle2 as `0x${string}`, // city
+        handle3 as `0x${string}`, // valuation
+        formattedProof as `0x${string}`,
       ]);
 
       console.log('✅ Contract call initiated');
@@ -185,152 +185,232 @@ export const PropertyRegistration: React.FC = () => {
   return (
     <div>
       {fheInstance == null ?
-        <div className="property-registration">
-          <h2>Property Registration</h2>
+        <div className="luxury-card text-center">
+          <div style={{ fontSize: '3rem', marginBottom: '12px' }}>🏗️</div>
+          <h2 style={{ fontSize: '1.5rem', margin: '0 0 12px 0' }}>Property Registration</h2>
+          <p style={{ fontSize: '0.9rem' }}>Initialize the FHE system to begin secure property registration</p>
           <button
             onClick={() => initFHE(publicClient, chainId)}
             disabled={isInitializing}
+            className={isInitializing ? "btn-secondary" : "btn-premium"}
+            style={{ marginTop: '15px', fontSize: '0.9rem', padding: '10px 20px' }}
           >
-            {isInitializing ? 'Initializing FHE...' : 'Init FHE'}
+            {isInitializing ? (
+              <>
+                <div className="luxury-spinner" style={{ width: '16px', height: '16px', marginRight: '8px' }}></div>
+                Initializing FHE...
+              </>
+            ) : (
+              <>
+                <span style={{ fontSize: '16px', marginRight: '6px' }}>🔐</span>
+                Initialize FHE System
+              </>
+            )}
           </button>
-
         </div> :
-        <div className="property-registration">
-          <h2>Property Registration</h2>
-          <p>Store property information securely on the blockchain using encrypted data</p>
-          <form onSubmit={handleSubmit} className="property-form">
-            <div className="form-group">
-              <label htmlFor="userAddress">Property Owner Address:</label>
-              <input
-                type="text"
-                id="userAddress"
-                value={formData.userAddress}
-                onChange={(e) => handleInputChange('userAddress', e.target.value)}
-                placeholder="0x..."
-                pattern="^0x[a-fA-F0-9]{40}$"
-                required
-              />
-              <small>Enter the property owner's Ethereum address</small>
+        <div>
+          <div className="luxury-card">
+            <div style={{ textAlign: 'center', marginBottom: '25px' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '12px' }}>🏗️</div>
+              <h2 style={{ fontSize: '1.5rem', margin: '0 0 12px 0' }}>Property Registration</h2>
+              <p style={{ 
+                fontSize: '1rem',
+                color: 'var(--color-platinum)',
+                maxWidth: '500px',
+                margin: '0 auto'
+              }}>
+                Store property information securely on the blockchain using encrypted data
+              </p>
             </div>
 
-            <div className="form-group">
-              <label htmlFor="country">Country:</label>
-              <select
-                id="country"
-                value={formData.country}
-                onChange={(e) => handleInputChange('country', e.target.value)}
-                required
-                style={{
-                  width: '100%',
-                  padding: '8px 12px',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                  fontSize: '14px'
-                }}
-              >
-                <option value={0}>Select Country</option>
-                {COUNTRIES.map((country) => (
-                  <option key={country.code} value={country.code}>
-                    {country.name}
+            <form onSubmit={handleSubmit} style={{ maxWidth: '500px', margin: '0 auto' }}>
+              <div className="form-group">
+                <label className="form-label" htmlFor="userAddress">
+                  <span style={{ fontSize: '18px', marginRight: '6px' }}>👤</span>
+                  Property Owner Address
+                </label>
+                <input
+                  type="text"
+                  id="userAddress"
+                  value={formData.userAddress}
+                  onChange={(e) => handleInputChange('userAddress', e.target.value)}
+                  placeholder="0x1234567890abcdef1234567890abcdef12345678"
+                  pattern="^0x[a-fA-F0-9]{40}$"
+                  required
+                  className="luxury-input"
+                />
+                <span className="form-hint">Enter the property owner's Ethereum address</span>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" htmlFor="country">
+                  <span style={{ fontSize: '18px', marginRight: '6px' }}>🌍</span>
+                  Country
+                </label>
+                <select
+                  id="country"
+                  value={formData.country}
+                  onChange={(e) => handleInputChange('country', e.target.value)}
+                  required
+                  className="luxury-select"
+                >
+                  <option value={0}>Select Country</option>
+                  {COUNTRIES.map((country) => (
+                    <option key={country.code} value={country.code}>
+                      {country.name}
+                    </option>
+                  ))}
+                </select>
+                <span className="form-hint">Select the country where the property is located</span>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" htmlFor="city">
+                  <span style={{ fontSize: '18px', marginRight: '6px' }}>🏙️</span>
+                  City
+                </label>
+                <select
+                  id="city"
+                  value={formData.city}
+                  onChange={(e) => handleInputChange('city', e.target.value)}
+                  required
+                  disabled={formData.country === 0 || availableCities.length === 0}
+                  className="luxury-select"
+                  style={{
+                    opacity: formData.country === 0 ? 0.6 : 1,
+                    cursor: formData.country === 0 ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  <option value={0}>
+                    {formData.country === 0 ? 'Please select country first' : 'Select City'}
                   </option>
-                ))}
-              </select>
-              <small>Select property location country</small>
-            </div>
+                  {availableCities.map((city) => (
+                    <option key={city.code} value={city.code}>
+                      {city.name}
+                    </option>
+                  ))}
+                </select>
+                <span className="form-hint">Select the city where the property is located</span>
+              </div>
 
-            <div className="form-group">
-              <label htmlFor="city">City:</label>
-              <select
-                id="city"
-                value={formData.city}
-                onChange={(e) => handleInputChange('city', e.target.value)}
-                required
-                disabled={formData.country === 0 || availableCities.length === 0}
-                style={{
-                  width: '100%',
-                  padding: '8px 12px',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                  fontSize: '14px',
-                  backgroundColor: formData.country === 0 ? '#f5f5f5' : 'white'
-                }}
-              >
-                <option value={0}>
-                  {formData.country === 0 ? 'Please select country first' : 'Select City'}
-                </option>
-                {availableCities.map((city) => (
-                  <option key={city.code} value={city.code}>
-                    {city.name}
-                  </option>
-                ))}
-              </select>
-              <small>Select property location city</small>
-            </div>
+              <div className="form-group">
+                <label className="form-label" htmlFor="valuation">
+                  <span style={{ fontSize: '20px', marginRight: '8px' }}>💰</span>
+                  Property Valuation (USD)
+                </label>
+                <input
+                  type="number"
+                  id="valuation"
+                  value={formData.valuation}
+                  onChange={(e) => handleInputChange('valuation', e.target.value)}
+                  placeholder="e.g., 500,000"
+                  min="1"
+                  required
+                  className="luxury-input"
+                />
+                <span className="form-hint">Enter the current market value of the property in USD</span>
+              </div>
 
-            <div className="form-group">
-              <label htmlFor="valuation">Property Valuation (USD):</label>
-              <input
-                type="number"
-                id="valuation"
-                value={formData.valuation}
-                onChange={(e) => handleInputChange('valuation', e.target.value)}
-                placeholder="e.g., 500000"
-                min="1"
-                required
-              />
-              <small>Property value in USD</small>
-            </div>
+              <div style={{ textAlign: 'center', marginTop: '40px' }}>
+                <button
+                  type="submit"
+                  disabled={isSubmitting || storeProperty.isPending || !address}
+                  className="btn-premium"
+                  style={{ 
+                    fontSize: '1.1rem',
+                    padding: '20px 50px',
+                    opacity: (isSubmitting || storeProperty.isPending || !address) ? 0.6 : 1
+                  }}
+                >
+                  {isSubmitting || storeProperty.isPending ? (
+                    <>
+                      <div className="luxury-spinner" style={{ width: '24px', height: '24px', marginRight: '12px' }}></div>
+                      Storing Property...
+                    </>
+                  ) : (
+                    <>
+                      <span style={{ fontSize: '20px', marginRight: '10px' }}>🔒</span>
+                      Store Property Information
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
 
-            <button
-              type="submit"
-              disabled={isSubmitting || storeProperty.isPending || !address}
-              className="submit-button"
-            >
-              {isSubmitting || storeProperty.isPending ? 'Storing Property...' : 'Store Property Info'}
-            </button>
-          </form>
+            {!address && (
+              <div style={{
+                marginTop: '30px',
+                padding: '20px',
+                background: 'linear-gradient(135deg, rgba(224, 17, 95, 0.1) 0%, rgba(224, 17, 95, 0.05) 100%)',
+                border: '2px solid rgba(224, 17, 95, 0.2)',
+                borderRadius: '16px',
+                textAlign: 'center'
+              }}>
+                <span style={{ fontSize: '24px', marginRight: '10px' }}>⚠️</span>
+                <strong>Please connect your wallet to register a property.</strong>
+              </div>
+            )}
+          </div>
 
-          {!address && (
-            <p className="warning">Please connect your wallet to register a property.</p>
-          )}
-
-          {/* Debug Information Panel */}
-          <div className="debug-panel" style={{
-            marginTop: '20px',
-            padding: '15px',
-            border: '2px solid #007acc',
-            borderRadius: '8px',
-            backgroundColor: '#f8f9fa',
-            fontFamily: 'monospace',
-            fontSize: '12px'
+          {/* Luxury Debug Information Panel */}
+          <div className="luxury-card" style={{
+            marginTop: '40px',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '13px'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-              <h3 style={{ margin: 0, color: '#007acc' }}>🛠️ Debug Information</h3>
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              marginBottom: '20px' 
+            }}>
+              <h3 style={{ 
+                margin: 0, 
+                color: 'var(--color-sapphire)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px'
+              }}>
+                <span style={{ fontSize: '24px' }}>🛠️</span>
+                Debug Information
+              </h3>
               <button
                 onClick={() => setDebugInfo([])}
+                className="btn-secondary"
                 style={{
-                  padding: '5px 10px',
-                  fontSize: '10px',
-                  border: '1px solid #007acc',
-                  backgroundColor: 'white',
-                  color: '#007acc',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
+                  padding: '8px 16px',
+                  fontSize: '12px'
                 }}
               >
-                Clear
+                Clear Logs
               </button>
             </div>
 
-            <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+            <div style={{ 
+              maxHeight: '200px', 
+              overflowY: 'auto',
+              background: 'rgba(0, 0, 0, 0.2)',
+              border: '1px solid rgba(255, 215, 0, 0.1)',
+              borderRadius: '12px',
+              padding: '15px'
+            }}>
               {debugInfo.length === 0 ? (
-                <p style={{ margin: 0, color: '#666' }}>No debug information yet...</p>
+                <p style={{ 
+                  margin: 0, 
+                  color: 'var(--color-silver)',
+                  fontStyle: 'italic',
+                  textAlign: 'center'
+                }}>
+                  No debug information yet...
+                </p>
               ) : (
                 debugInfo.map((info, index) => (
                   <div key={index} style={{
-                    marginBottom: '5px',
-                    padding: '2px 0',
-                    borderBottom: '1px solid #e9ecef'
+                    marginBottom: '8px',
+                    padding: '4px 0',
+                    borderBottom: '1px solid rgba(255, 215, 0, 0.1)',
+                    color: 'var(--color-platinum)',
+                    lineHeight: '1.4'
                   }}>
                     {info}
                   </div>
@@ -338,22 +418,107 @@ export const PropertyRegistration: React.FC = () => {
               )}
             </div>
 
-            {/* Current Status */}
-            <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#e9ecef', borderRadius: '4px' }}>
-              <strong>Current Status:</strong>
-              <ul style={{ margin: '5px 0', paddingLeft: '20px' }}>
-                <li>Wallet: {address ? `✅ Connected (${address.slice(0, 6)}...${address.slice(-4)})` : '❌ Not connected'}</li>
-                <li>Contract: {contractAddress ? `✅ Available (${contractAddress.slice(0, 6)}...${contractAddress.slice(-4)})` : '❌ Not available'}</li>
-                <li>FHE: {fheInstance == null ? (isInitializing ? '🔄 Initializing' : '⏳ Not initialized') : fheError ? `❌ Error: ${fheError}` : '✅ Ready'}</li>
-                <li>Transaction: {storeProperty.isPending ? '🔄 Pending' : storeProperty.isSuccess ? `✅ Success (${storeProperty.data})` : storeProperty.error ? `❌ Failed: ${storeProperty.error.message}` : '⏳ Ready'}</li>
-              </ul>
+            {/* Luxury Status Section */}
+            <div style={{ 
+              marginTop: '25px', 
+              padding: '20px',
+              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
+              border: '1px solid rgba(255, 215, 0, 0.1)',
+              borderRadius: '16px'
+            }}>
+              <h4 style={{ 
+                margin: '0 0 15px 0',
+                color: 'var(--color-ivory)',
+                fontSize: '1.1rem'
+              }}>
+                Current Status:
+              </h4>
+              
+              <div style={{ display: 'grid', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '18px' }}>
+                    {address ? '✅' : '❌'}
+                  </span>
+                  <span style={{ color: 'var(--color-platinum)' }}>
+                    <strong>Wallet:</strong> {address ? 
+                      `Connected (${address.slice(0, 6)}...${address.slice(-4)})` : 
+                      'Not connected'
+                    }
+                  </span>
+                </div>
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '18px' }}>
+                    {contractAddress ? '✅' : '❌'}
+                  </span>
+                  <span style={{ color: 'var(--color-platinum)' }}>
+                    <strong>Contract:</strong> {contractAddress ? 
+                      `Available (${contractAddress.slice(0, 6)}...${contractAddress.slice(-4)})` : 
+                      'Not available'
+                    }
+                  </span>
+                </div>
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '18px' }}>
+                    {fheInstance == null ? (isInitializing ? '🔄' : '⏳') : fheError ? '❌' : '✅'}
+                  </span>
+                  <span style={{ color: 'var(--color-platinum)' }}>
+                    <strong>FHE:</strong> {
+                      fheInstance == null ? 
+                        (isInitializing ? 'Initializing' : 'Not initialized') : 
+                        fheError ? `Error: ${fheError}` : 'Ready'
+                    }
+                  </span>
+                </div>
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '18px' }}>
+                    {storeProperty.isPending ? '🔄' : 
+                     storeProperty.isSuccess ? '✅' : 
+                     storeProperty.error ? '❌' : '⏳'}
+                  </span>
+                  <span style={{ color: 'var(--color-platinum)' }}>
+                    <strong>Transaction:</strong> {
+                      storeProperty.isPending ? 'Pending' : 
+                      storeProperty.isSuccess ? `Success (${storeProperty.data})` : 
+                      storeProperty.error ? `Failed: ${storeProperty.error.message}` : 'Ready'
+                    }
+                  </span>
+                </div>
+              </div>
             </div>
 
-            {/* Additional Error Details */}
+            {/* Enhanced Error Details */}
             {storeProperty.error && (
-              <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#fee', borderRadius: '4px', border: '1px solid #fcc' }}>
-                <strong style={{ color: '#c33' }}>Transaction Error Details:</strong>
-                <pre style={{ margin: '5px 0', fontSize: '10px', whiteSpace: 'pre-wrap' }}>
+              <div style={{ 
+                marginTop: '20px', 
+                padding: '20px',
+                background: 'linear-gradient(135deg, rgba(224, 17, 95, 0.1) 0%, rgba(224, 17, 95, 0.05) 100%)',
+                border: '2px solid rgba(224, 17, 95, 0.2)',
+                borderRadius: '16px'
+              }}>
+                <h4 style={{ 
+                  color: 'var(--color-ruby)', 
+                  margin: '0 0 10px 0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <span style={{ fontSize: '20px' }}>🚨</span>
+                  Transaction Error Details:
+                </h4>
+                <pre style={{ 
+                  margin: '10px 0 0 0', 
+                  fontSize: '11px', 
+                  whiteSpace: 'pre-wrap',
+                  background: 'rgba(0, 0, 0, 0.3)',
+                  padding: '15px',
+                  borderRadius: '8px',
+                  color: 'var(--color-platinum)',
+                  lineHeight: '1.4',
+                  overflow: 'auto'
+                }}>
                   {JSON.stringify(storeProperty.error, null, 2)}
                 </pre>
               </div>

@@ -92,7 +92,6 @@ export const PropertyInfo: React.FC = () => {
     city?: number;
     valuation?: number;
   } | null>(null);
-  const [decryptionError, setDecryptionError] = useState<string | null>(null);
 
   // Authorization form state
   const [authForm, setAuthForm] = useState({
@@ -109,7 +108,6 @@ export const PropertyInfo: React.FC = () => {
 
     try {
       setIsDecrypting(true);
-      setDecryptionError(null);
 
       console.log('🔍 Starting property decryption...');
 
@@ -197,7 +195,7 @@ export const PropertyInfo: React.FC = () => {
     } catch (error) {
       console.error('❌ Error decrypting property:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown decryption error';
-      setDecryptionError(errorMessage);
+      console.error(errorMessage);
     } finally {
       setIsDecrypting(false);
     }
@@ -209,7 +207,7 @@ export const PropertyInfo: React.FC = () => {
       return;
     }
 
-    writeAuthorizeQuery([authForm.requester, parseInt(authForm.queryType)]);
+    writeAuthorizeQuery([authForm.requester as `0x${string}`, parseInt(authForm.queryType)]);
   };
 
   if (fheLoading || !fheInstance) {
@@ -446,43 +444,43 @@ export const PropertyInfo: React.FC = () => {
             )
           `,
           backdropFilter: 'blur(30px)',
-          borderRadius: '40px',
+          borderRadius: '30px',
           border: '1px solid rgba(255, 255, 255, 0.1)',
           boxShadow: `
-            0 50px 100px rgba(0, 0, 0, 0.4),
+            0 30px 60px rgba(0, 0, 0, 0.4),
             inset 0 1px 0 rgba(255, 255, 255, 0.1),
-            0 0 120px rgba(78, 205, 196, 0.15)
+            0 0 80px rgba(78, 205, 196, 0.15)
           `,
-          marginBottom: '40px',
+          marginBottom: '20px',
           overflow: 'hidden',
           position: 'relative'
         }}>
           {/* Top Accent */}
           <div style={{
-            height: '6px',
+            height: '4px',
             background: 'linear-gradient(90deg, #ffd700, #ff6b6b, #4ecdc4, #45b7d1)',
             backgroundSize: '300% 100%',
             animation: 'slideGradient 8s linear infinite'
           }} />
           
-          <div style={{ padding: '50px' }}>
+          <div style={{ padding: '25px' }}>
             {/* Property Header */}
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              marginBottom: '40px',
-              gap: '25px'
+              marginBottom: '20px',
+              gap: '15px'
             }}>
               <div style={{
-                width: '80px',
-                height: '80px',
-                borderRadius: '20px',
+                width: '60px',
+                height: '60px',
+                borderRadius: '15px',
                 background: 'linear-gradient(135deg, #ffd700, #ff6b6b)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '40px',
-                boxShadow: '0 20px 40px rgba(255, 215, 0, 0.3)'
+                fontSize: '30px',
+                boxShadow: '0 15px 30px rgba(255, 215, 0, 0.3)'
               }}>
                 💎
               </div>
@@ -490,16 +488,16 @@ export const PropertyInfo: React.FC = () => {
                 <h2 style={{
                   margin: '0',
                   color: '#ffffff',
-                  fontSize: 'clamp(1.8rem, 4vw, 2.5rem)',
+                  fontSize: 'clamp(1.3rem, 3vw, 1.8rem)',
                   fontWeight: '700',
-                  letterSpacing: '1px'
+                  letterSpacing: '0.5px'
                 }}>
                   Premium Property Assets
                 </h2>
                 <p style={{
-                  margin: '8px 0 0 0',
+                  margin: '4px 0 0 0',
                   color: '#8892b0',
-                  fontSize: '1.1rem',
+                  fontSize: '0.9rem',
                   fontWeight: '300'
                 }}>
                   {decryptedData ? '✨ Decrypted & Authenticated' : '🔐 Encrypted & Secured'}
@@ -510,29 +508,29 @@ export const PropertyInfo: React.FC = () => {
             {/* Property Data Grid */}
             <div style={{
               display: 'grid',
-              gap: '25px',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-              marginBottom: '30px'
+              gap: '15px',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              marginBottom: '20px'
             }}>
               {/* Country Card */}
               <div style={{
-                padding: '30px',
+                padding: '20px',
                 background: 'linear-gradient(135deg, rgba(255, 107, 107, 0.15) 0%, rgba(255, 107, 107, 0.05) 100%)',
-                borderRadius: '25px',
+                borderRadius: '20px',
                 border: '1px solid rgba(255, 107, 107, 0.2)',
                 backdropFilter: 'blur(20px)',
-                boxShadow: '0 20px 40px rgba(255, 107, 107, 0.1)'
+                boxShadow: '0 15px 30px rgba(255, 107, 107, 0.1)'
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' }}>
-                  <span style={{ fontSize: '30px' }}>🌍</span>
-                  <strong style={{ color: '#ffffff', fontSize: '1.3rem', fontWeight: '600' }}>Location</strong>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                  <span style={{ fontSize: '24px' }}>🌍</span>
+                  <strong style={{ color: '#ffffff', fontSize: '1.1rem', fontWeight: '600' }}>Location</strong>
                 </div>
                 <div style={{
                   color: decryptedData ? '#ff6b6b' : '#6b7280',
-                  fontSize: 'clamp(1.3rem, 3vw, 1.8rem)',
+                  fontSize: 'clamp(1.1rem, 2.5vw, 1.4rem)',
                   fontWeight: '700',
                   fontFamily: 'Monaco, monospace',
-                  textShadow: decryptedData ? '0 0 10px rgba(255, 107, 107, 0.3)' : 'none'
+                  textShadow: decryptedData ? '0 0 8px rgba(255, 107, 107, 0.3)' : 'none'
                 }}>
                   {decryptedData ? getCountryName(decryptedData.country!) : '████████████'}
                 </div>
@@ -540,23 +538,23 @@ export const PropertyInfo: React.FC = () => {
 
               {/* City Card */}
               <div style={{
-                padding: '30px',
+                padding: '20px',
                 background: 'linear-gradient(135deg, rgba(78, 205, 196, 0.15) 0%, rgba(78, 205, 196, 0.05) 100%)',
-                borderRadius: '25px',
+                borderRadius: '20px',
                 border: '1px solid rgba(78, 205, 196, 0.2)',
                 backdropFilter: 'blur(20px)',
-                boxShadow: '0 20px 40px rgba(78, 205, 196, 0.1)'
+                boxShadow: '0 15px 30px rgba(78, 205, 196, 0.1)'
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' }}>
-                  <span style={{ fontSize: '30px' }}>🏙️</span>
-                  <strong style={{ color: '#ffffff', fontSize: '1.3rem', fontWeight: '600' }}>District</strong>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                  <span style={{ fontSize: '24px' }}>🏙️</span>
+                  <strong style={{ color: '#ffffff', fontSize: '1.1rem', fontWeight: '600' }}>District</strong>
                 </div>
                 <div style={{
                   color: decryptedData ? '#4ecdc4' : '#6b7280',
-                  fontSize: 'clamp(1.3rem, 3vw, 1.8rem)',
+                  fontSize: 'clamp(1.1rem, 2.5vw, 1.4rem)',
                   fontWeight: '700',
                   fontFamily: 'Monaco, monospace',
-                  textShadow: decryptedData ? '0 0 10px rgba(78, 205, 196, 0.3)' : 'none'
+                  textShadow: decryptedData ? '0 0 8px rgba(78, 205, 196, 0.3)' : 'none'
                 }}>
                   {decryptedData ? getCityName(decryptedData.city!) : '███████████'}
                 </div>
@@ -564,12 +562,12 @@ export const PropertyInfo: React.FC = () => {
 
               {/* Valuation Card */}
               <div style={{
-                padding: '30px',
+                padding: '20px',
                 background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.05) 100%)',
-                borderRadius: '25px',
+                borderRadius: '20px',
                 border: '1px solid rgba(255, 215, 0, 0.2)',
                 backdropFilter: 'blur(20px)',
-                boxShadow: '0 20px 40px rgba(255, 215, 0, 0.1)',
+                boxShadow: '0 15px 30px rgba(255, 215, 0, 0.1)',
                 gridColumn: 'span 2'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' }}>
