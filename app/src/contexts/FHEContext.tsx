@@ -54,9 +54,7 @@ export const FHEProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       // Initialize SDK first
       await initSDK();
       const fheInstance = await createInstance({
-        ...SepoliaConfig,
-        network: provider,
-        chainId: chainId
+        ...SepoliaConfig
       });
       setInstance(fheInstance);
       console.log("FHE init success");

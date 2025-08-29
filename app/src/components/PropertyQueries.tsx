@@ -12,9 +12,9 @@ interface QueryResult {
 
 export const PropertyQueries: React.FC = () => {
   const { address } = useAccount();
-  const { 
+  const {
     queryCountry,
-    queryCity, 
+    queryCity,
     queryValuation,
     writeQueryCountry,
     writeQueryCity,
@@ -95,12 +95,12 @@ export const PropertyQueries: React.FC = () => {
   return (
     <div className="property-queries">
       <h2>Property Verification Queries</h2>
-      
+
       {/* Query Section */}
       <div className="query-section">
         <h3>Perform Queries</h3>
         <p>Query properties (requires authorization from property owner):</p>
-        
+
         <div className="query-form">
           <div className="form-group">
             <label>Property Owner Address:</label>
@@ -124,7 +124,7 @@ export const PropertyQueries: React.FC = () => {
                   placeholder="e.g., 1"
                 />
               </div>
-              <button 
+              <button
                 onClick={handleQueryCountry}
                 disabled={queryCountry.isPending}
                 className="query-button"
@@ -134,7 +134,7 @@ export const PropertyQueries: React.FC = () => {
             </div>
 
             <div className="query-option">
-              <h4>City Query</h4>
+              <h4>City Info</h4>
               <div className="form-group">
                 <label>City Code:</label>
                 <input
@@ -144,7 +144,7 @@ export const PropertyQueries: React.FC = () => {
                   placeholder="e.g., 1"
                 />
               </div>
-              <button 
+              <button
                 onClick={handleQueryCity}
                 disabled={queryCity.isPending}
                 className="query-button"
@@ -164,7 +164,7 @@ export const PropertyQueries: React.FC = () => {
                   placeholder="e.g., 500000"
                 />
               </div>
-              <button 
+              <button
                 onClick={handleQueryValuation}
                 disabled={queryValuation.isPending}
                 className="query-button"
