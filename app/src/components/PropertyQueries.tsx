@@ -16,11 +16,9 @@ export const PropertyQueries: React.FC = () => {
     queryCountry,
     queryCity, 
     queryValuation,
-    authorizeQuery,
     writeQueryCountry,
     writeQueryCity,
-    writeQueryValuation,
-    writeAuthorizeQuery
+    writeQueryValuation
   } = useRWAHouse();
 
   const [queries, setQueries] = useState<QueryResult[]>([]);
@@ -31,10 +29,6 @@ export const PropertyQueries: React.FC = () => {
     minValuation: '',
   });
 
-  const [authForm, setAuthForm] = useState({
-    requester: '',
-    queryType: '0', // 0=COUNTRY, 1=CITY, 2=VALUATION
-  });
 
   const handleQueryCountry = () => {
     if (!queryForm.propertyOwner || !queryForm.countryCode) {
@@ -88,14 +82,6 @@ export const PropertyQueries: React.FC = () => {
     setQueries(prev => [...prev, newQuery]);
   };
 
-  const handleAuthorizeQuery = () => {
-    if (!authForm.requester) {
-      alert('Please enter requester address');
-      return;
-    }
-
-    writeAuthorizeQuery([authForm.requester, parseInt(authForm.queryType)]);
-  };
 
   if (!address) {
     return (
@@ -110,44 +96,6 @@ export const PropertyQueries: React.FC = () => {
     <div className="property-queries">
       <h2>Property Verification Queries</h2>
       
-      {/* Authorization Section */}
-      <div className="auth-section">
-        <h3>Authorize Query Access</h3>
-        <p>As a property owner, authorize others to query your property:</p>
-        
-        <div className="auth-form">
-          <div className="form-group">
-            <label>Requester Address:</label>
-            <input
-              type="text"
-              value={authForm.requester}
-              onChange={(e) => setAuthForm(prev => ({ ...prev, requester: e.target.value }))}
-              placeholder="0x..."
-            />
-          </div>
-          
-          <div className="form-group">
-            <label>Query Type:</label>
-            <select
-              value={authForm.queryType}
-              onChange={(e) => setAuthForm(prev => ({ ...prev, queryType: e.target.value }))}
-            >
-              <option value="0">Country Query</option>
-              <option value="1">City Query</option>
-              <option value="2">Valuation Query</option>
-            </select>
-          </div>
-          
-          <button 
-            onClick={handleAuthorizeQuery}
-            disabled={authorizeQuery.isPending}
-            className="auth-button"
-          >
-            {authorizeQuery.isPending ? 'Authorizing...' : 'Authorize Query'}
-          </button>
-        </div>
-      </div>
-
       {/* Query Section */}
       <div className="query-section">
         <h3>Perform Queries</h3>

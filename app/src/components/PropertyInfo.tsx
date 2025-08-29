@@ -13,6 +13,8 @@ export const PropertyInfo: React.FC = () => {
   const { 
     useHasProperty, 
     useGetPropertyInfoForDecryption,
+    authorizeQuery,
+    writeAuthorizeQuery,
     contractAddress 
   } = useRWAHouse();
   
@@ -26,6 +28,12 @@ export const PropertyInfo: React.FC = () => {
     valuation?: number;
   } | null>(null);
   const [decryptionError, setDecryptionError] = useState<string | null>(null);
+  
+  // Authorization form state
+  const [authForm, setAuthForm] = useState({
+    requester: '',
+    queryType: '0', // 0=COUNTRY, 1=CITY, 2=VALUATION
+  });
 
   const handleDecryptProperty = async () => {
     if (!address || !contractAddress || !fheInstance || !walletClient) {
@@ -127,6 +135,15 @@ export const PropertyInfo: React.FC = () => {
     } finally {
       setIsDecrypting(false);
     }
+  };
+
+  const handleAuthorizeQuery = () => {
+    if (!authForm.requester) {
+      alert('Please enter requester address');
+      return;
+    }
+
+    writeAuthorizeQuery([authForm.requester, parseInt(authForm.queryType)]);
   };
 
   if (fheLoading || !fheInstance) {
@@ -272,6 +289,109 @@ export const PropertyInfo: React.FC = () => {
           <p>⚠️ Could not load encrypted property data from the contract. This might be due to network issues or contract configuration.</p>
         </div>
       )}
+
+      {/* Authorization Section */}
+      <div className="auth-section" style={{
+        marginTop: '30px',
+        padding: '20px',
+        backgroundColor: '#f8f9fa',
+        borderRadius: '8px',
+        border: '1px solid #dee2e6'
+      }}>
+        <h3>Authorize Query Access</h3>
+        <p>Allow others to query specific information about your property:</p>
+        
+        <div className="auth-form">
+          <div className="form-group" style={{ marginBottom: '15px' }}>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              Requester Address:
+            </label>
+            <input
+              type="text"
+              value={authForm.requester}
+              onChange={(e) => setAuthForm(prev => ({ ...prev, requester: e.target.value }))}
+              placeholder="0x..."
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                fontSize: '14px'
+              }}
+            />
+            <small style={{ color: '#666', fontSize: '12px' }}>
+              Enter the address that you want to authorize for queries
+            </small>
+          </div>
+          
+          <div className="form-group" style={{ marginBottom: '15px' }}>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              Query Type:
+            </label>
+            <select
+              value={authForm.queryType}
+              onChange={(e) => setAuthForm(prev => ({ ...prev, queryType: e.target.value }))}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                fontSize: '14px'
+              }}
+            >
+              <option value="0">Country Query</option>
+              <option value="1">City Query</option>
+              <option value="2">Valuation Query</option>
+            </select>
+            <small style={{ color: '#666', fontSize: '12px' }}>
+              Select which type of query to authorize
+            </small>
+          </div>
+          
+          <button 
+            onClick={handleAuthorizeQuery}
+            disabled={authorizeQuery.isPending || !authForm.requester}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: authorizeQuery.isPending || !authForm.requester ? '#ccc' : '#28a745',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: authorizeQuery.isPending || !authForm.requester ? 'not-allowed' : 'pointer',
+              fontSize: '14px',
+              fontWeight: 'bold'
+            }}
+          >
+            {authorizeQuery.isPending ? 'Authorizing...' : 'Authorize Query'}
+          </button>
+        </div>
+
+        {authorizeQuery.isSuccess && (
+          <div style={{
+            marginTop: '15px',
+            padding: '10px',
+            backgroundColor: '#d4edda',
+            border: '1px solid #c3e6cb',
+            borderRadius: '4px',
+            color: '#155724'
+          }}>
+            ✅ Query authorization successful!
+          </div>
+        )}
+
+        {authorizeQuery.error && (
+          <div style={{
+            marginTop: '15px',
+            padding: '10px',
+            backgroundColor: '#f8d7da',
+            border: '1px solid #f5c6cb',
+            borderRadius: '4px',
+            color: '#721c24'
+          }}>
+            ❌ Authorization failed: {authorizeQuery.error.message}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
