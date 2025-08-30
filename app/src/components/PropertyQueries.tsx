@@ -13,6 +13,7 @@ interface QueryResult {
   result?: boolean;
 }
 
+
 export const PropertyQueries: React.FC = () => {
   const { address } = useAccount();
   const chainId = useChainId();
@@ -43,48 +44,42 @@ export const PropertyQueries: React.FC = () => {
 
   // Get latest request ID for current user
   const { data: latestRequestId, refetch: refetchLatestRequestId } = useGetLatestRequestId(address);
-  
+
   // Get query request details for the latest request
-  const { data: queryRequestData, refetch: refetchQueryRequest } = useGetQueryRequest(
+  const { data: queryRequestData, refetch: refetchQueryRequest, error: queryRequestError, isLoading: queryRequestLoading } = useGetQueryRequest(
     latestRequestId ? BigInt(latestRequestId.toString()) : undefined
   );
 
-  // Watch for QueryResultReady events
-  useWatchContractEvent({
-    address: getContractAddress() as `0x${string}`,
-    abi: RWA_HOUSE_ABI,
-    eventName: 'QueryResultReady',
-    onLogs(logs) {
-      console.log('QueryResultReady events received:', logs);
-      logs.forEach((log) => {
-        const { requestId, result } = log.args as { requestId: bigint; result: boolean };
-        
-        // Update the query in our local state
-        setQueries(prevQueries => 
-          prevQueries.map(query => 
-            query.requestId === requestId.toString() 
-              ? { ...query, isPending: false, result } 
-              : query
-          )
-        );
-      });
+  useEffect(() => {
+    console.log("latestRequestId:", latestRequestId);
+    console.log("queryRequestData:", queryRequestData);
+    if (queryRequestData) {
+      console.log("isPending (queryRequestData[4]):", queryRequestData[4]);
+      console.log("result (queryRequestData[5]):", queryRequestData[5]);
+    }
+  }, [latestRequestId, queryRequestData])
+
+  // Auto-refresh query request data every 5 seconds to check for updates
+  useEffect(() => {
+    if (latestRequestId && queryRequestData && queryRequestData[4]) { // If there's a pending request
+      const interval = setInterval(() => {
+        refetchQueryRequest();
+      }, 5000);
       
-      // Refetch the latest request data
-      refetchLatestRequestId();
-      refetchQueryRequest();
-    },
-  });
+      return () => clearInterval(interval);
+    }
+  }, [latestRequestId, queryRequestData, refetchQueryRequest]);
 
   // Effect to update queries when contract data changes
   useEffect(() => {
     if (latestRequestId && queryRequestData) {
-      const [requester, propertyOwner, queryType, compareValue, isPending] = queryRequestData;
-      
+      const [requester, propertyOwner, queryType, compareValue, isPending, result] = queryRequestData;
+
       // Only update if this is our request
       if (requester === address) {
         setQueries(prevQueries => {
           const existingQuery = prevQueries.find(q => q.requestId === latestRequestId.toString());
-          
+
           if (!existingQuery) {
             // Add new query if it doesn't exist
             const queryTypeMap = { 0: 'country', 1: 'city', 2: 'valuation' } as const;
@@ -93,13 +88,14 @@ export const PropertyQueries: React.FC = () => {
               type: queryTypeMap[queryType as 0 | 1 | 2] || 'country',
               value: compareValue,
               isPending,
+              result: result
             };
             return [...prevQueries, newQuery];
           } else {
             // Update existing query
-            return prevQueries.map(query => 
+            return prevQueries.map(query =>
               query.requestId === latestRequestId.toString()
-                ? { ...query, isPending }
+                ? { ...query, isPending, result }
                 : query
             );
           }
@@ -117,7 +113,7 @@ export const PropertyQueries: React.FC = () => {
 
     try {
       const result = await writeQueryCountry([queryForm.propertyOwner as `0x${string}`, parseInt(queryForm.countryCode)]);
-      
+
       // After transaction succeeds, refetch to get the latest request ID
       setTimeout(() => {
         refetchLatestRequestId();
@@ -136,7 +132,7 @@ export const PropertyQueries: React.FC = () => {
 
     try {
       const result = await writeQueryCity([queryForm.propertyOwner as `0x${string}`, parseInt(queryForm.cityCode)]);
-      
+
       // After transaction succeeds, refetch to get the latest request ID
       setTimeout(() => {
         refetchLatestRequestId();
@@ -155,7 +151,7 @@ export const PropertyQueries: React.FC = () => {
 
     try {
       const result = await writeQueryValuation([queryForm.propertyOwner as `0x${string}`, parseInt(queryForm.minValuation)]);
-      
+
       // After transaction succeeds, refetch to get the latest request ID
       setTimeout(() => {
         refetchLatestRequestId();
@@ -189,6 +185,37 @@ export const PropertyQueries: React.FC = () => {
 
   return (
     <div>
+      {/* DEBUG: Query Result - Always Visible */}
+      <div className="luxury-card" style={{ marginBottom: '10px', padding: '12px', backgroundColor: 'rgba(255, 0, 0, 0.1)' }}>
+        <h3 style={{ margin: '0 0 8px 0', color: 'red' }}>DEBUG: Query Result Status</h3>
+        <div style={{ fontSize: '0.8rem', marginBottom: '8px' }}>
+          <div>latestRequestId: {latestRequestId ? latestRequestId.toString() : 'null'}</div>
+          <div>queryRequestData: {queryRequestData ? 
+            `[${Array.from(queryRequestData).map(item => 
+              typeof item === 'bigint' ? item.toString() : 
+              typeof item === 'boolean' ? item.toString() : 
+              typeof item === 'string' ? `"${item}"` : 
+              String(item)
+            ).join(', ')}]` 
+            : 'null'}
+          </div>
+          <div>queryRequestLoading: {queryRequestLoading ? 'true' : 'false'}</div>
+          <div>queryRequestError: {queryRequestError ? String(queryRequestError) : 'null'}</div>
+          <div>Contract Address: {getContractAddress()}</div>
+        </div>
+        {queryRequestData && (
+          <div style={{
+            padding: '8px',
+            background: queryRequestData[5] ? 'rgba(0, 255, 0, 0.2)' : 'rgba(255, 0, 0, 0.2)',
+            borderRadius: '4px'
+          }}>
+            <strong>{queryRequestData[5] ? '✅ MATCH' : '❌ NO MATCH'}</strong>
+            <div>isPending: {queryRequestData[4] ? 'true' : 'false'}</div>
+            <div>result: {queryRequestData[5] ? 'true' : 'false'}</div>
+          </div>
+        )}
+      </div>
+
       {/* Ultra Compact Header */}
       <div className="luxury-card" style={{ marginBottom: '10px', padding: '8px 12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -203,37 +230,160 @@ export const PropertyQueries: React.FC = () => {
       {/* Current Request Status */}
       {latestRequestId && queryRequestData && (
         <div className="luxury-card" style={{ marginBottom: '10px', padding: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
             <span style={{ fontSize: '1rem' }}>📊</span>
-            <h3 style={{ margin: 0, fontSize: '0.9rem' }}>Current Request Status</h3>
-            <span style={{ 
-              color: queryRequestData[4] ? 'var(--color-gold)' : 'var(--color-emerald)', 
-              fontSize: '0.75rem', 
-              marginLeft: 'auto' 
+            <h3 style={{ margin: 0, fontSize: '0.9rem' }}>Latest Request Details (DEBUG: showing)</h3>
+            <span style={{
+              color: queryRequestData[4] ? 'var(--color-gold)' : 'var(--color-emerald)',
+              fontSize: '0.75rem',
+              marginLeft: 'auto'
             }}>
-              Request ID: {latestRequestId.toString()}
+              ID: {latestRequestId.toString()}
             </span>
           </div>
-          
+
+          {/* Request Details Grid */}
+          <div style={{ display: 'grid', gap: '8px', marginBottom: '10px' }}>
+            {/* Requester */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '6px 10px',
+              background: 'rgba(255, 255, 255, 0.03)',
+              borderRadius: '4px',
+              border: '1px solid rgba(255, 255, 255, 0.1)'
+            }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--color-silver)' }}>👤 Requester:</span>
+              <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: 'var(--color-ivory)' }}>
+                {queryRequestData[0].slice(0, 6)}...{queryRequestData[0].slice(-4)}
+              </span>
+            </div>
+
+            {/* Property Owner */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '6px 10px',
+              background: 'rgba(255, 255, 255, 0.03)',
+              borderRadius: '4px',
+              border: '1px solid rgba(255, 255, 255, 0.1)'
+            }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--color-silver)' }}>🏠 Property Owner:</span>
+              <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: 'var(--color-ivory)' }}>
+                {queryRequestData[1].slice(0, 6)}...{queryRequestData[1].slice(-4)}
+              </span>
+            </div>
+
+            {/* Query Type */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '6px 10px',
+              background: 'rgba(255, 255, 255, 0.03)',
+              borderRadius: '4px',
+              border: '1px solid rgba(255, 255, 255, 0.1)'
+            }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--color-silver)' }}>🔍 Query Type:</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                {(() => {
+                  const queryTypeMap = { 0: { icon: '🌍', name: 'Country' }, 1: { icon: '🏙️', name: 'City' }, 2: { icon: '💰', name: 'Valuation' } };
+                  const typeInfo = queryTypeMap[queryRequestData[2] as 0 | 1 | 2];
+                  return (
+                    <>
+                      <span style={{ fontSize: '0.8rem' }}>{typeInfo?.icon}</span>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--color-ivory)' }}>{typeInfo?.name}</span>
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+
+            {/* Compare Value */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '6px 10px',
+              background: 'rgba(255, 255, 255, 0.03)',
+              borderRadius: '4px',
+              border: '1px solid rgba(255, 255, 255, 0.1)'
+            }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--color-silver)' }}>📋 Compare Value:</span>
+              <span style={{ fontSize: '0.8rem', color: 'var(--color-ivory)' }}>
+                {queryRequestData[2] === 2 ? `$${queryRequestData[3].toLocaleString()}` : queryRequestData[3].toString()}
+              </span>
+            </div>
+          </div>
+
+
+          {/* Query Result (always show for debugging) */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '6px 10px',
+            background: 'rgba(255, 255, 255, 0.03)',
+            borderRadius: '4px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            marginBottom: '8px'
+          }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--color-silver)' }}>
+              🎯 Query Result: 
+              {queryRequestData ? 
+                ` (isPending: ${queryRequestData[4]}, result: ${queryRequestData[5]})` : 
+                ' (no data)'
+              }
+            </span>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '4px 10px',
+              borderRadius: '12px',
+              background: (queryRequestData && queryRequestData[5]) ?
+                'rgba(80, 200, 120, 0.15)' :
+                'rgba(224, 17, 95, 0.15)',
+              border: (queryRequestData && queryRequestData[5]) ?
+                '1px solid rgba(80, 200, 120, 0.25)' :
+                '1px solid rgba(224, 17, 95, 0.25)'
+            }}>
+              <span style={{ fontSize: '0.7rem' }}>
+                {(queryRequestData && queryRequestData[5]) ? '✅' : '❌'}
+              </span>
+              <span style={{
+                color: (queryRequestData && queryRequestData[5]) ? 'var(--color-emerald)' : 'var(--color-ruby)',
+                fontSize: '0.8rem',
+                fontWeight: '600'
+              }}>
+                {(queryRequestData && queryRequestData[5]) ? 'MATCH' : 'NO MATCH'}
+              </span>
+            </div>
+          </div>
+
+          {/* Status Indicator */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '12px',
-            padding: '8px 12px',
-            background: queryRequestData[4] 
+            justifyContent: 'center',
+            gap: '8px',
+            padding: '10px 12px',
+            background: queryRequestData[4]
               ? 'linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%)'
               : 'linear-gradient(135deg, rgba(80, 200, 120, 0.1) 0%, rgba(80, 200, 120, 0.05) 100%)',
-            border: queryRequestData[4] 
+            border: queryRequestData[4]
               ? '1px solid rgba(255, 215, 0, 0.2)'
               : '1px solid rgba(80, 200, 120, 0.2)',
             borderRadius: '6px'
           }}>
-            <span style={{ fontSize: '0.8rem' }}>
-              {queryRequestData[4] ? '⏳ Pending decryption...' : '✅ Query completed'}
+            <span style={{ fontSize: '0.85rem', fontWeight: '600' }}>
+              {queryRequestData[4] ? '⏳ Pending Decryption' : '✅ Decryption Complete'}
             </span>
-            
+
             {queryRequestData[4] && (
-              <div className="luxury-spinner" style={{ width: '12px', height: '12px' }}></div>
+              <div className="luxury-spinner" style={{ width: '14px', height: '14px' }}></div>
             )}
           </div>
         </div>
@@ -289,7 +439,7 @@ export const PropertyQueries: React.FC = () => {
               onClick={handleQueryCountry}
               disabled={queryCountry.isPending || !queryForm.propertyOwner || !queryForm.countryCode}
               className="btn-premium"
-              style={{ 
+              style={{
                 opacity: (queryCountry.isPending || !queryForm.propertyOwner || !queryForm.countryCode) ? 0.6 : 1,
                 fontSize: '0.8rem',
                 padding: '8px 16px',
@@ -332,7 +482,7 @@ export const PropertyQueries: React.FC = () => {
               onClick={handleQueryCity}
               disabled={queryCity.isPending || !queryForm.propertyOwner || !queryForm.cityCode}
               className="btn-premium"
-              style={{ 
+              style={{
                 opacity: (queryCity.isPending || !queryForm.propertyOwner || !queryForm.cityCode) ? 0.6 : 1,
                 fontSize: '0.8rem',
                 padding: '8px 16px',
@@ -375,7 +525,7 @@ export const PropertyQueries: React.FC = () => {
               onClick={handleQueryValuation}
               disabled={queryValuation.isPending || !queryForm.propertyOwner || !queryForm.minValuation}
               className="btn-premium"
-              style={{ 
+              style={{
                 opacity: (queryValuation.isPending || !queryForm.propertyOwner || !queryForm.minValuation) ? 0.6 : 1,
                 fontSize: '0.8rem',
                 padding: '8px 16px',
@@ -434,9 +584,9 @@ export const PropertyQueries: React.FC = () => {
                     left: 0,
                     right: 0,
                     height: '2px',
-                    background: query.isPending ? 
+                    background: query.isPending ?
                       'linear-gradient(90deg, #FFD700, #0F52BA, #FFD700)' :
-                      query.result ? 
+                      query.result ?
                         'linear-gradient(90deg, #50C878, #32CD32)' :
                         'linear-gradient(90deg, #E0115F, #DC143C)',
                     backgroundSize: query.isPending ? '200% 100%' : '100% 100%',
@@ -513,17 +663,18 @@ export const PropertyQueries: React.FC = () => {
               <span style={{ fontSize: '0.8rem' }}>📋</span>
               <span style={{ fontSize: '0.8rem' }}>Summary:</span>
             </div>
-            <span style={{ 
-              color: 'var(--color-silver)', 
+            <span style={{
+              color: 'var(--color-silver)',
               fontSize: '0.75rem'
             }}>
-              Total: {queries.length} | 
-              Pending: {queries.filter(q => q.isPending).length} | 
+              Total: {queries.length} |
+              Pending: {queries.filter(q => q.isPending).length} |
               Done: {queries.filter(q => !q.isPending).length}
             </span>
           </div>
         </div>
       )}
+
     </div>
   );
 };

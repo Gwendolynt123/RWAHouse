@@ -1,7 +1,6 @@
 export const CONTRACT_ADDRESSES = {
-  // Update these addresses after deployment
-  localhost: '0x5FbDB2315678afecb367f032d93F642f64180aa3', // Default hardhat first contract address
-  sepolia: '0xaf111dd501693C9aa5ddd7769eaa7b90FdB57c6d', // Add deployed contract address on Sepolia
+  localhost: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+  sepolia: "0xB1956e60A3B59Bb14E8Cc4eBda6C351F79f10692",
 } as const;
 
 export const RWA_HOUSE_ABI = [
@@ -292,44 +291,6 @@ export const RWA_HOUSE_ABI = [
         "type": "address"
       }
     ],
-    "name": "getPropertyCity",
-    "outputs": [
-      {
-        "internalType": "euint32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "owner",
-        "type": "address"
-      }
-    ],
-    "name": "getPropertyCountry",
-    "outputs": [
-      {
-        "internalType": "euint32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "owner",
-        "type": "address"
-      }
-    ],
     "name": "getPropertyInfo",
     "outputs": [
       {
@@ -351,54 +312,6 @@ export const RWA_HOUSE_ABI = [
         "internalType": "bool",
         "name": "exists",
         "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "owner",
-        "type": "address"
-      }
-    ],
-    "name": "getPropertyLocation",
-    "outputs": [
-      {
-        "internalType": "euint32",
-        "name": "country",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "euint32",
-        "name": "city",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bool",
-        "name": "exists",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "owner",
-        "type": "address"
-      }
-    ],
-    "name": "getPropertyValuation",
-    "outputs": [
-      {
-        "internalType": "euint32",
-        "name": "",
-        "type": "bytes32"
       }
     ],
     "stateMutability": "view",
@@ -437,6 +350,11 @@ export const RWA_HOUSE_ABI = [
       {
         "internalType": "bool",
         "name": "isPending",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "result",
         "type": "bool"
       }
     ],
@@ -504,7 +422,7 @@ export const RWA_HOUSE_ABI = [
         "type": "uint8"
       }
     ],
-    "name": "isQueryUsed",
+    "name": "isQueryAuthorized",
     "outputs": [
       {
         "internalType": "bool",

@@ -50,6 +50,7 @@ contract RWAHouse is SepoliaConfig {
         uint32 compareValue;
         bool isPending;
         uint256 requestId;
+        bool result;
     }
 
     /// @notice Mapping to track decryption requests
@@ -310,7 +311,8 @@ contract RWAHouse is SepoliaConfig {
             queryType: QueryType.COUNTRY,
             compareValue: countryCode,
             isPending: true,
-            requestId: requestId
+            requestId: requestId,
+            result: false
         });
 
         latestRequestId[msg.sender] = requestId;
@@ -348,7 +350,8 @@ contract RWAHouse is SepoliaConfig {
             queryType: QueryType.CITY,
             compareValue: cityCode,
             isPending: true,
-            requestId: requestId
+            requestId: requestId,
+            result: false
         });
 
         latestRequestId[msg.sender] = requestId;
@@ -389,7 +392,8 @@ contract RWAHouse is SepoliaConfig {
             queryType: QueryType.VALUATION,
             compareValue: minValue,
             isPending: true,
-            requestId: requestId
+            requestId: requestId,
+            result: false
         });
 
         latestRequestId[msg.sender] = requestId;
@@ -407,7 +411,7 @@ contract RWAHouse is SepoliaConfig {
         FHE.checkSignatures(requestId, signatures);
 
         decryptionRequests[requestId].isPending = false;
-
+        decryptionRequests[requestId].result = result;
         emit QueryResultReady(requestId, result);
     }
 
@@ -417,7 +421,7 @@ contract RWAHouse is SepoliaConfig {
         FHE.checkSignatures(requestId, signatures);
 
         decryptionRequests[requestId].isPending = false;
-
+        decryptionRequests[requestId].result = result;
         emit QueryResultReady(requestId, result);
     }
 
@@ -427,7 +431,7 @@ contract RWAHouse is SepoliaConfig {
         FHE.checkSignatures(requestId, signatures);
 
         decryptionRequests[requestId].isPending = false;
-
+        decryptionRequests[requestId].result = result;
         emit QueryResultReady(requestId, result);
     }
 
@@ -440,15 +444,16 @@ contract RWAHouse is SepoliaConfig {
     /// @return queryType The query type
     /// @return compareValue The comparison value used
     /// @return isPending Whether the request is still pending
+    /// @return result The query result (only valid when isPending is false)
     function getQueryRequest(
         uint256 requestId
     )
         external
         view
-        returns (address requester, address propertyOwner, QueryType queryType, uint32 compareValue, bool isPending)
+        returns (address requester, address propertyOwner, QueryType queryType, uint32 compareValue, bool isPending, bool result)
     {
         DecryptionRequest memory request = decryptionRequests[requestId];
-        return (request.requester, request.propertyOwner, request.queryType, request.compareValue, request.isPending);
+        return (request.requester, request.propertyOwner, request.queryType, request.compareValue, request.isPending, request.result);
     }
 
     /// @notice Get the latest request ID for an address
