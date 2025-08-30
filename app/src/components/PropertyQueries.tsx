@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { useRWAHouse } from '../hooks/useRWAHouse';
+import { useWatchContractEvent } from 'wagmi';
+import { RWA_HOUSE_ABI, CONTRACT_ADDRESSES } from '../config/contracts';
+import { useChainId } from 'wagmi';
 
 interface QueryResult {
   requestId: string;
@@ -12,14 +15,22 @@ interface QueryResult {
 
 export const PropertyQueries: React.FC = () => {
   const { address } = useAccount();
+  const chainId = useChainId();
   const {
     queryCountry,
     queryCity,
     queryValuation,
     writeQueryCountry,
     writeQueryCity,
-    writeQueryValuation
+    writeQueryValuation,
+    useGetLatestRequestId,
+    useGetQueryRequest
   } = useRWAHouse();
+
+  const getContractAddress = () => {
+    if (chainId === 11155111) return CONTRACT_ADDRESSES.sepolia;
+    return CONTRACT_ADDRESSES.localhost;
+  };
 
   const [queries, setQueries] = useState<QueryResult[]>([]);
   const [queryForm, setQueryForm] = useState({
@@ -28,58 +39,131 @@ export const PropertyQueries: React.FC = () => {
     cityCode: '',
     minValuation: '',
   });
+  const [currentRequestId, setCurrentRequestId] = useState<bigint | null>(null);
+
+  // Get latest request ID for current user
+  const { data: latestRequestId, refetch: refetchLatestRequestId } = useGetLatestRequestId(address);
+  
+  // Get query request details for the latest request
+  const { data: queryRequestData, refetch: refetchQueryRequest } = useGetQueryRequest(
+    latestRequestId ? BigInt(latestRequestId.toString()) : undefined
+  );
+
+  // Watch for QueryResultReady events
+  useWatchContractEvent({
+    address: getContractAddress() as `0x${string}`,
+    abi: RWA_HOUSE_ABI,
+    eventName: 'QueryResultReady',
+    onLogs(logs) {
+      console.log('QueryResultReady events received:', logs);
+      logs.forEach((log) => {
+        const { requestId, result } = log.args as { requestId: bigint; result: boolean };
+        
+        // Update the query in our local state
+        setQueries(prevQueries => 
+          prevQueries.map(query => 
+            query.requestId === requestId.toString() 
+              ? { ...query, isPending: false, result } 
+              : query
+          )
+        );
+      });
+      
+      // Refetch the latest request data
+      refetchLatestRequestId();
+      refetchQueryRequest();
+    },
+  });
+
+  // Effect to update queries when contract data changes
+  useEffect(() => {
+    if (latestRequestId && queryRequestData) {
+      const [requester, propertyOwner, queryType, compareValue, isPending] = queryRequestData;
+      
+      // Only update if this is our request
+      if (requester === address) {
+        setQueries(prevQueries => {
+          const existingQuery = prevQueries.find(q => q.requestId === latestRequestId.toString());
+          
+          if (!existingQuery) {
+            // Add new query if it doesn't exist
+            const queryTypeMap = { 0: 'country', 1: 'city', 2: 'valuation' } as const;
+            const newQuery: QueryResult = {
+              requestId: latestRequestId.toString(),
+              type: queryTypeMap[queryType as 0 | 1 | 2] || 'country',
+              value: compareValue,
+              isPending,
+            };
+            return [...prevQueries, newQuery];
+          } else {
+            // Update existing query
+            return prevQueries.map(query => 
+              query.requestId === latestRequestId.toString()
+                ? { ...query, isPending }
+                : query
+            );
+          }
+        });
+      }
+    }
+  }, [latestRequestId, queryRequestData, address]);
 
 
-  const handleQueryCountry = () => {
+  const handleQueryCountry = async () => {
     if (!queryForm.propertyOwner || !queryForm.countryCode) {
       alert('Please fill in property owner address and country code');
       return;
     }
 
-    writeQueryCountry([queryForm.propertyOwner as `0x${string}`, parseInt(queryForm.countryCode)]);
-
-    // Add to pending queries
-    const newQuery: QueryResult = {
-      requestId: Date.now().toString(), // Temporary ID
-      type: 'country',
-      value: parseInt(queryForm.countryCode),
-      isPending: true,
-    };
-    setQueries(prev => [...prev, newQuery]);
+    try {
+      const result = await writeQueryCountry([queryForm.propertyOwner as `0x${string}`, parseInt(queryForm.countryCode)]);
+      
+      // After transaction succeeds, refetch to get the latest request ID
+      setTimeout(() => {
+        refetchLatestRequestId();
+      }, 2000);
+    } catch (error) {
+      console.error('Query country failed:', error);
+      alert('Query failed. Please try again.');
+    }
   };
 
-  const handleQueryCity = () => {
+  const handleQueryCity = async () => {
     if (!queryForm.propertyOwner || !queryForm.cityCode) {
       alert('Please fill in property owner address and city code');
       return;
     }
 
-    writeQueryCity([queryForm.propertyOwner as `0x${string}`, parseInt(queryForm.cityCode)]);
-
-    const newQuery: QueryResult = {
-      requestId: Date.now().toString(),
-      type: 'city',
-      value: parseInt(queryForm.cityCode),
-      isPending: true,
-    };
-    setQueries(prev => [...prev, newQuery]);
+    try {
+      const result = await writeQueryCity([queryForm.propertyOwner as `0x${string}`, parseInt(queryForm.cityCode)]);
+      
+      // After transaction succeeds, refetch to get the latest request ID
+      setTimeout(() => {
+        refetchLatestRequestId();
+      }, 2000);
+    } catch (error) {
+      console.error('Query city failed:', error);
+      alert('Query failed. Please try again.');
+    }
   };
 
-  const handleQueryValuation = () => {
+  const handleQueryValuation = async () => {
     if (!queryForm.propertyOwner || !queryForm.minValuation) {
       alert('Please fill in property owner address and minimum valuation');
       return;
     }
 
-    writeQueryValuation([queryForm.propertyOwner as `0x${string}`, parseInt(queryForm.minValuation)]);
-
-    const newQuery: QueryResult = {
-      requestId: Date.now().toString(),
-      type: 'valuation',
-      value: parseInt(queryForm.minValuation),
-      isPending: true,
-    };
-    setQueries(prev => [...prev, newQuery]);
+    try {
+      const result = await writeQueryValuation([queryForm.propertyOwner as `0x${string}`, parseInt(queryForm.minValuation)]);
+      
+      // After transaction succeeds, refetch to get the latest request ID
+      setTimeout(() => {
+        refetchLatestRequestId();
+      }, 2000);
+    } catch (error) {
+      console.error('Query valuation failed:', error);
+      alert('Query failed. Please try again.');
+    }
   };
 
 
@@ -115,6 +199,45 @@ export const PropertyQueries: React.FC = () => {
           </span>
         </div>
       </div>
+
+      {/* Current Request Status */}
+      {latestRequestId && queryRequestData && (
+        <div className="luxury-card" style={{ marginBottom: '10px', padding: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+            <span style={{ fontSize: '1rem' }}>📊</span>
+            <h3 style={{ margin: 0, fontSize: '0.9rem' }}>Current Request Status</h3>
+            <span style={{ 
+              color: queryRequestData[4] ? 'var(--color-gold)' : 'var(--color-emerald)', 
+              fontSize: '0.75rem', 
+              marginLeft: 'auto' 
+            }}>
+              Request ID: {latestRequestId.toString()}
+            </span>
+          </div>
+          
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            padding: '8px 12px',
+            background: queryRequestData[4] 
+              ? 'linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%)'
+              : 'linear-gradient(135deg, rgba(80, 200, 120, 0.1) 0%, rgba(80, 200, 120, 0.05) 100%)',
+            border: queryRequestData[4] 
+              ? '1px solid rgba(255, 215, 0, 0.2)'
+              : '1px solid rgba(80, 200, 120, 0.2)',
+            borderRadius: '6px'
+          }}>
+            <span style={{ fontSize: '0.8rem' }}>
+              {queryRequestData[4] ? '⏳ Pending decryption...' : '✅ Query completed'}
+            </span>
+            
+            {queryRequestData[4] && (
+              <div className="luxury-spinner" style={{ width: '12px', height: '12px' }}></div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Property Owner Input */}
       <div className="luxury-card" style={{ marginBottom: '10px', padding: '12px' }}>

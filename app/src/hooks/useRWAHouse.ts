@@ -73,6 +73,32 @@ export const useRWAHouse = () => {
     });
   };
 
+  // Get latest request ID
+  const useGetLatestRequestId = (requester?: string) => {
+    return useReadContract({
+      address: getContractAddress() as `0x${string}`,
+      abi: RWA_HOUSE_ABI,
+      functionName: 'getLatestRequestId',
+      args: requester ? [requester as `0x${string}`] : undefined,
+      query: {
+        enabled: !!requester,
+      },
+    });
+  };
+
+  // Get query request details
+  const useGetQueryRequest = (requestId?: bigint) => {
+    return useReadContract({
+      address: getContractAddress() as `0x${string}`,
+      abi: RWA_HOUSE_ABI,
+      functionName: 'getQueryRequest',
+      args: requestId !== undefined ? [requestId] : undefined,
+      query: {
+        enabled: requestId !== undefined,
+      },
+    });
+  };
+
   // Helper functions to call write contracts with proper parameters
   const writeStoreProperty = (userAddress: string, args: [`0x${string}`, `0x${string}`, `0x${string}`, `0x${string}`]) => {
     const contractAddress = getContractAddress();
@@ -159,6 +185,8 @@ export const useRWAHouse = () => {
     useHasProperty,
     useIsAuthorized,
     useGetPropertyInfoForDecryption,
+    useGetLatestRequestId,
+    useGetQueryRequest,
     storeProperty,
     authorizeAccess,
     revokeAccess,

@@ -27,7 +27,7 @@ const COMPANIES: Company[] = [
   {
     id: '1',
     name: 'Prime Capital Lending',
-    address: '0x742d35Cc6634C0532925a3b8D2c65d3D8a9f1234',
+    address: '0xdcaa8735f58F247E39Ab18301f3221d39b76a8af',
     description: 'Leading mortgage lender specializing in residential and commercial property financing with over 20 years of experience.',
     type: 'lending'
   },
@@ -270,11 +270,11 @@ export const PropertyInfo: React.FC = () => {
       }}>
         <div style={{ textAlign: 'center', maxWidth: '600px', padding: '0 20px' }}>
           <div style={{ fontSize: '100px', marginBottom: '30px' }}>🔐</div>
-          <h2 style={{ 
-            fontSize: '3rem', 
-            marginBottom: '20px', 
-            background: 'linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1)', 
-            WebkitBackgroundClip: 'text', 
+          <h2 style={{
+            fontSize: '3rem',
+            marginBottom: '20px',
+            background: 'linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1)',
+            WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             fontWeight: '800'
           }}>
@@ -301,11 +301,11 @@ export const PropertyInfo: React.FC = () => {
       }}>
         <div style={{ textAlign: 'center', maxWidth: '700px', padding: '0 20px' }}>
           <div style={{ fontSize: '120px', marginBottom: '30px' }}>🏛️</div>
-          <h2 style={{ 
-            fontSize: '3.5rem', 
-            marginBottom: '20px', 
-            background: 'linear-gradient(45deg, #ffd700, #ff6b6b, #4ecdc4)', 
-            WebkitBackgroundClip: 'text', 
+          <h2 style={{
+            fontSize: '3.5rem',
+            marginBottom: '20px',
+            background: 'linear-gradient(45deg, #ffd700, #ff6b6b, #4ecdc4)',
+            WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             fontWeight: '900'
           }}>
@@ -347,7 +347,7 @@ export const PropertyInfo: React.FC = () => {
         `,
         animation: 'float 20s ease-in-out infinite'
       }} />
-      
+
       {/* Main Content Container */}
       <div style={{
         maxWidth: '1400px',
@@ -356,7 +356,7 @@ export const PropertyInfo: React.FC = () => {
         position: 'relative',
         zIndex: 1
       }}>
-        
+
         {/* Luxury Header */}
         <div style={{
           textAlign: 'center',
@@ -390,13 +390,13 @@ export const PropertyInfo: React.FC = () => {
             borderRadius: '3px',
             boxShadow: '0 0 20px rgba(255, 107, 107, 0.5)'
           }} />
-          
+
           <div style={{
             fontSize: '120px',
             marginBottom: '20px',
             filter: 'drop-shadow(0 0 30px rgba(255, 215, 0, 0.5))'
           }}>🏰</div>
-          
+
           <h1 style={{
             fontSize: 'clamp(3rem, 8vw, 6rem)',
             fontWeight: '900',
@@ -411,7 +411,7 @@ export const PropertyInfo: React.FC = () => {
           }}>
             LUXURY ESTATE PORTFOLIO
           </h1>
-          
+
           <div style={{
             height: '4px',
             width: '200px',
@@ -420,7 +420,7 @@ export const PropertyInfo: React.FC = () => {
             borderRadius: '2px',
             boxShadow: '0 0 20px rgba(255, 215, 0, 0.5)'
           }} />
-          
+
           <p style={{
             color: '#b8c5d1',
             fontSize: 'clamp(1.1rem, 3vw, 1.5rem)',
@@ -462,7 +462,7 @@ export const PropertyInfo: React.FC = () => {
             backgroundSize: '300% 100%',
             animation: 'slideGradient 8s linear infinite'
           }} />
-          
+
           <div style={{ padding: '25px' }}>
             {/* Property Header */}
             <div style={{
@@ -595,8 +595,8 @@ export const PropertyInfo: React.FC = () => {
             disabled={isDecrypting || !encryptedPropertyData}
             style={{
               padding: '20px 60px',
-              background: isDecrypting 
-                ? 'linear-gradient(135deg, #4b5563 0%, #374151 100%)' 
+              background: isDecrypting
+                ? 'linear-gradient(135deg, #4b5563 0%, #374151 100%)'
                 : 'linear-gradient(135deg, #ffd700 0%, #ff6b6b 50%, #4ecdc4 100%)',
               color: 'white',
               border: 'none',
@@ -604,7 +604,7 @@ export const PropertyInfo: React.FC = () => {
               cursor: isDecrypting ? 'not-allowed' : 'pointer',
               fontSize: 'clamp(1.1rem, 3vw, 1.4rem)',
               fontWeight: '700',
-              boxShadow: isDecrypting 
+              boxShadow: isDecrypting
                 ? 'none'
                 : '0 20px 40px rgba(255, 215, 0, 0.3), 0 0 60px rgba(255, 107, 107, 0.2)',
               transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -652,7 +652,7 @@ export const PropertyInfo: React.FC = () => {
             backgroundSize: '300% 100%',
             animation: 'slideGradient 8s linear infinite'
           }} />
-          
+
           <div style={{ padding: '50px' }}>
             {/* Authorization Header */}
             <div style={{
@@ -752,8 +752,8 @@ export const PropertyInfo: React.FC = () => {
                       <strong style={{ color: '#ffffff', fontSize: '1.2rem' }}>🏢 {selectedCompany.name}</strong>
                       <span style={{
                         padding: '6px 15px',
-                        background: selectedCompany.type === 'lending' 
-                          ? 'linear-gradient(135deg, #ffd700, #ff6b6b)' 
+                        background: selectedCompany.type === 'lending'
+                          ? 'linear-gradient(135deg, #ffd700, #ff6b6b)'
                           : 'linear-gradient(135deg, #4ecdc4, #45b7d1)',
                         color: 'white',
                         borderRadius: '15px',
@@ -766,7 +766,7 @@ export const PropertyInfo: React.FC = () => {
                       </span>
                     </div>
                     <div style={{ marginBottom: '12px', fontSize: '1rem', color: '#b8c5d1' }}>
-                      <strong>📍 Contract:</strong> 
+                      <strong>📍 Contract:</strong>
                       <code style={{
                         backgroundColor: 'rgba(0, 0, 0, 0.3)',
                         padding: '6px 12px',
@@ -818,7 +818,7 @@ export const PropertyInfo: React.FC = () => {
                   <option value="1" style={{ background: '#1a1a2e', color: '#ffffff' }}>🏙️ Metropolitan Analysis</option>
                   <option value="2" style={{ background: '#1a1a2e', color: '#ffffff' }}>💎 Valuation Intelligence</option>
                 </select>
-                
+
                 <div style={{
                   marginTop: '15px',
                   padding: '15px',
@@ -828,7 +828,7 @@ export const PropertyInfo: React.FC = () => {
                   fontSize: '0.95rem',
                   color: '#c7d2fe'
                 }}>
-                  <strong>🔒 Privacy Guarantee:</strong> Partners receive only binary verification results, never specific property details. 
+                  <strong>🔒 Privacy Guarantee:</strong> Partners receive only binary verification results, never specific property details.
                   Example: Confirmation of geographic criteria without revealing exact location.
                 </div>
               </div>
@@ -841,8 +841,8 @@ export const PropertyInfo: React.FC = () => {
                 disabled={authorizeQuery.isPending || !authForm.requester}
                 style={{
                   padding: '18px 50px',
-                  background: authorizeQuery.isPending || !authForm.requester 
-                    ? 'linear-gradient(135deg, #4b5563 0%, #374151 100%)' 
+                  background: authorizeQuery.isPending || !authForm.requester
+                    ? 'linear-gradient(135deg, #4b5563 0%, #374151 100%)'
                     : 'linear-gradient(135deg, #45b7d1 0%, #4ecdc4 50%, #ffd700 100%)',
                   color: 'white',
                   border: 'none',
@@ -850,7 +850,7 @@ export const PropertyInfo: React.FC = () => {
                   cursor: authorizeQuery.isPending || !authForm.requester ? 'not-allowed' : 'pointer',
                   fontSize: '1.2rem',
                   fontWeight: '700',
-                  boxShadow: authorizeQuery.isPending || !authForm.requester 
+                  boxShadow: authorizeQuery.isPending || !authForm.requester
                     ? 'none'
                     : '0 20px 40px rgba(69, 183, 209, 0.3), 0 0 60px rgba(78, 205, 196, 0.2)',
                   transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
