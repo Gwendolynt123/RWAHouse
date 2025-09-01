@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { useRWAHouse } from '../hooks/useRWAHouse';
-import { useWatchContractEvent } from 'wagmi';
-import { RWA_HOUSE_ABI, CONTRACT_ADDRESSES } from '../config/contracts';
+import { CONTRACT_ADDRESSES } from '../config/contracts';
 import { useChainId } from 'wagmi';
 
 interface QueryResult {
@@ -40,7 +39,6 @@ export const PropertyQueries: React.FC = () => {
     cityCode: '',
     minValuation: '',
   });
-  const [currentRequestId, setCurrentRequestId] = useState<bigint | null>(null);
 
   // Get latest request ID for current user
   const { data: latestRequestId, refetch: refetchLatestRequestId } = useGetLatestRequestId(address);
@@ -73,7 +71,7 @@ export const PropertyQueries: React.FC = () => {
   // Effect to update queries when contract data changes
   useEffect(() => {
     if (latestRequestId && queryRequestData) {
-      const [requester, propertyOwner, queryType, compareValue, isPending, result] = queryRequestData;
+      const [requester, , queryType, compareValue, isPending, result] = queryRequestData;
 
       // Only update if this is our request
       if (requester === address) {
@@ -112,7 +110,7 @@ export const PropertyQueries: React.FC = () => {
     }
 
     try {
-      const result = await writeQueryCountry([queryForm.propertyOwner as `0x${string}`, parseInt(queryForm.countryCode)]);
+      await writeQueryCountry([queryForm.propertyOwner as `0x${string}`, parseInt(queryForm.countryCode)]);
 
       // After transaction succeeds, refetch to get the latest request ID
       setTimeout(() => {
@@ -131,7 +129,7 @@ export const PropertyQueries: React.FC = () => {
     }
 
     try {
-      const result = await writeQueryCity([queryForm.propertyOwner as `0x${string}`, parseInt(queryForm.cityCode)]);
+      await writeQueryCity([queryForm.propertyOwner as `0x${string}`, parseInt(queryForm.cityCode)]);
 
       // After transaction succeeds, refetch to get the latest request ID
       setTimeout(() => {
@@ -150,7 +148,7 @@ export const PropertyQueries: React.FC = () => {
     }
 
     try {
-      const result = await writeQueryValuation([queryForm.propertyOwner as `0x${string}`, parseInt(queryForm.minValuation)]);
+      await writeQueryValuation([queryForm.propertyOwner as `0x${string}`, parseInt(queryForm.minValuation)]);
 
       // After transaction succeeds, refetch to get the latest request ID
       setTimeout(() => {
@@ -191,7 +189,7 @@ export const PropertyQueries: React.FC = () => {
         <div style={{ fontSize: '0.8rem', marginBottom: '8px' }}>
           <div>latestRequestId: {latestRequestId ? latestRequestId.toString() : 'null'}</div>
           <div>queryRequestData: {queryRequestData ? 
-            `[${Array.from(queryRequestData).map(item => 
+            `[${Array.from(queryRequestData).map((item: any) => 
               typeof item === 'bigint' ? item.toString() : 
               typeof item === 'boolean' ? item.toString() : 
               typeof item === 'string' ? `"${item}"` : 
